@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سکانەری زیرەکی زانا</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; text-align: center; padding: 20px; }
+        #reader { width: 100%; max-width: 400px; margin: auto; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .result-box { 
+            margin-top: 25px; background: white; padding: 20px; border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none; max-width: 400px; margin-left: auto; margin-right: auto;
+        }
+        .product-img { width: 150px; height: 150px; object-fit: contain; margin-bottom: 15px; border-radius: 10px; }
+        .price-tag { font-size: 28px; color: #25D366; font-weight: bold; margin: 10px 0; }
+        .item-name { font-size: 22px; color: #333; }
+    </style>
+</head>
+<body>
+    <h2 style="color: #333;">سکانەری نرخی کاڵاکان</h2>
+    <div id="reader"></div>
+
+    <div id="result" class="result-box">
+        <img id="item-img" src="" class="product-img">
+        <div id="item-name" class="item-name"></div>
+        <div id="item-price" class="price-tag"></div>
+    </div>
+
+    <script>
+        // لێرە لیستەکە بە وێنەوە زیاد بکە
+        const products = {
+            "12345678": { 
+                name: "ئایفۆن ١٥ پرۆ", 
+                price: "999$", 
+                img: "https://shop.apple.com/iphone15.jpg" 
+            },
+            "87654321": { 
+                name: "سەماعەی بلوتوس", 
+                price: "45,000 دینار", 
+                img: "https://m.media-amazon.com/images/I/headphone.jpg" 
+            }
+        };
+
+        function onScanSuccess(decodedText) {
+            const resultDiv = document.getElementById('result');
+            const product = products[decodedText];
+
+            if (product) {
+                document.getElementById('item-name').innerText = product.name;
+                document.getElementById('item-price').innerText = product.price;
+                document.getElementById('item-img').src = product.img;
+                document.getElementById('item-img').style.display = 'block';
+                resultDiv.style.display = 'block';
+            } else {
+                document.getElementById('item-name').innerText = "کۆدەکە نەدۆزرایەوە: " + decodedText;
+                document.getElementById('item-price').innerText = "تکایە لە لیستی نرخەکان زیادی بکە";
+                document.getElementById('item-img').style.display = 'none';
+                resultDiv.style.display = 'block';
+            }
+        }
+
+        let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
+        html5QrcodeScanner.render(onScanSuccess);
+    </script>
+</body>
+</html>
