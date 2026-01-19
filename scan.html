@@ -3,81 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>کۆگای شاشە و پاتری زانا</title>
+    <title>سیستەمی فرۆشتنی زانا - بەشی پارچەکان</title>
     <style>
-        body { font-family: sans-serif; background: #f0f4f8; padding: 20px; text-align: center; }
-        .container { max-width: 550px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
-        h2 { color: #2c3e50; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        body { font-family: sans-serif; background: #f0f2f5; padding: 15px; text-align: center; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
-        .input-box { display: flex; gap: 10px; margin-bottom: 25px; }
-        input { flex: 1; padding: 15px; border: 2px solid #cbd5e0; border-radius: 12px; font-size: 18px; outline: none; transition: 0.3s; }
-        input:focus { border-color: #3182ce; box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5); }
-        .search-btn { background: #3182ce; color: white; border: none; padding: 0 25px; border-radius: 12px; cursor: pointer; font-weight: bold; }
+        .section-title { background: #3182ce; color: white; padding: 10px; border-radius: 10px; margin: 20px 0 10px 0; }
+        .battery-title { background: #2f855a; }
 
-        .item-card { 
-            background: #fff; border: 2px solid #e2e8f0; border-radius: 15px; padding: 15px; 
-            margin-top: 20px; display: none; text-align: right; 
-        }
-        .item-card img { width: 120px; height: 120px; object-fit: contain; float: left; border-radius: 10px; background: #f7fafc; }
-        .item-info { margin-right: 10px; }
-        .price-tag { font-size: 28px; color: #2f855a; font-weight: bold; margin-top: 10px; }
-        .category { display: inline-block; background: #edf2f7; padding: 4px 10px; border-radius: 5px; font-size: 14px; color: #4a5568; }
+        .search-area { display: flex; gap: 10px; margin-bottom: 20px; }
+        input { flex: 1; padding: 15px; border: 2px solid #ddd; border-radius: 12px; font-size: 16px; }
+        .btn-add { background: #4a5568; color: white; border: none; padding: 0 20px; border-radius: 12px; cursor: pointer; }
+
+        .cart-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .cart-table th, .cart-table td { padding: 12px; border-bottom: 1px solid #eee; text-align: right; }
+        .cart-table img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; }
+
+        .total-box { font-size: 28px; color: #2d3748; font-weight: bold; margin-top: 25px; padding: 15px; background: #edf2f7; border-radius: 15px; border: 2px dashed #cbd5e0; }
+        .currency { color: #2f855a; font-size: 18px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>سیستەمی نرخی شاشە و پاتری</h2>
-    
-    <div class="input-box">
-        <input type="text" id="partCode" placeholder="کۆدی شاشە یان پاتری بنووسە..." onkeypress="handleKeyPress(event)">
-        <button class="search-btn" onclick="findPart()">بگەڕێ</button>
+    <h2>بەڕێوەبردنی فرۆشتنی زانا</h2>
+
+    <div class="search-area">
+        <input type="text" id="inputCode" placeholder="کۆدی شاشە یان پاتری بنووسە..." onkeypress="if(event.key==='Enter') addItem()">
+        <button class="btn-add" onclick="addItem()">+ زیادکردن</button>
     </div>
 
-    <div id="resultCard" class="item-card">
-        <img id="partImg" src="" alt="وێنەی پارچە">
-        <div class="item-info">
-            <span id="partCat" class="category"></span>
-            <h3 id="partName" style="margin: 10px 0;"></h3>
-            <div id="partPrice" class="price-tag"></div>
-        </div>
-        <div style="clear: both;"></div>
+    <table class="cart-table">
+        <thead>
+            <tr style="background: #f8f9fa;">
+                <th>وێنە</th>
+                <th>ناونیشانی پارچە</th>
+                <th>نرخ</th>
+                <th>کردار</th>
+            </tr>
+        </thead>
+        <tbody id="cart-list">
+            </tbody>
+    </table>
+
+    <div class="total-box">
+        کۆی گشتی: <span id="total-amount">0</span> <span class="currency">$</span>
     </div>
     
-    <p id="errorMsg" style="color: red; display: none; margin-top: 20px;">ئەم کۆدە بوونی نییە!</p>
+    <button onclick="if(confirm('دڵنیای؟')) { cart=[]; updateUI(); }" style="margin-top:20px; color:red; background:none; border:none; cursor:pointer;">سڕینەوەی هەموو لیستەکە</button>
 </div>
 
 <script>
-    // لیستی پارچەکان - لێرە کۆدی شاشەکان زیاد بکە
-    const mobileParts = {
-        "000": { name: "شاشە iPhone 13 Pro Max (Original)", price: "250$", cat: "شاشە", img: "screen-i13.jpg" },
-        "111": { name: "شاشە Samsung S22 Ultra", price: "180$", cat: "شاشە", img: "screen-s22.jpg" },
-        "222": { name: "پاتری iPhone 12 Mini", price: "35$", cat: "پاتری", img: "battery-i12.jpg" },
-        "333": { name: "پاتری Huawei P30 Pro", price: "25$", cat: "پاتری", img: "battery-p30.jpg" }
+    // لیستی داتا (بەشی شاشە و پاتری جیاکراوەتەوە)
+    const data = {
+        // بەشی شاشەکان (Screens)
+        "S13": { name: "شاشە iPhone 13 Pro", price: 160, img: "s13.jpg" },
+        "S14": { name: "شاشە iPhone 14 Max", price: 210, img: "s14.jpg" },
+        
+        // بەشی پاترییەکان (Batteries)
+        "B12": { name: "پاتری iPhone 12", price: 35, img: "b12.jpg" },
+        "B13": { name: "پاتری iPhone 13 Mini", price: 45, img: "b13.jpg" }
     };
 
-    function findPart() {
-        const code = document.getElementById('partCode').value.toUpperCase();
-        const part = mobileParts[code];
-        const card = document.getElementById('resultCard');
-        const error = document.getElementById('errorMsg');
+    let cart = [];
 
-        if (part) {
-            document.getElementById('partName').innerText = part.name;
-            document.getElementById('partPrice').innerText = "نرخ: " + part.price;
-            document.getElementById('partCat').innerText = part.cat;
-            document.getElementById('partImg').src = part.img;
-            
-            card.style.display = 'block';
-            error.style.display = 'none';
+    function addItem() {
+        const code = document.getElementById('inputCode').value.toUpperCase();
+        const item = data[code];
+
+        if (item) {
+            cart.push(item);
+            updateUI();
+            document.getElementById('inputCode').value = "";
         } else {
-            card.style.display = 'none';
-            error.style.display = 'block';
+            alert("ئەم کۆدە بوونی نییە لە کۆگادا!");
         }
     }
 
-    function handleKeyPress(e) {
-        if (e.key === 'Enter') findPart();
+    function updateUI() {
+        const list = document.getElementById('cart-list');
+        list.innerHTML = "";
+        let total = 0;
+
+        cart.forEach((item, index) => {
+            total += item.price;
+            list.innerHTML += `
+                <tr>
+                    <td><img src="${item.img}" onerror="this.src='https://via.placeholder.com/50?text=No+Img'"></td>
+                    <td style="font-weight:bold;">${item.name}</td>
+                    <td style="color:#2f855a;">${item.price} $</td>
+                    <td><button onclick="remove(${index})" style="color:red; border:none; background:none; cursor:pointer;">✖</button></td>
+                </tr>`;
+        });
+        document.getElementById('total-amount').innerText = total;
+    }
+
+    function remove(index) {
+        cart.splice(index, 1);
+        updateUI();
     }
 </script>
 
