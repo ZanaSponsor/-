@@ -2,80 +2,84 @@
 <html dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سکانەری زیرەکی زانا</title>
+    <title>سیستەمی فرۆشتن بە وێنەوە</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; text-align: center; padding: 20px; }
-        .container { max-width: 450px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        #reader { width: 100%; border-radius: 15px; overflow: hidden; margin-bottom: 20px; }
-        .input-group { margin-bottom: 20px; display: flex; gap: 5px; }
-        input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; text-align: center; }
-        button { padding: 12px 20px; background: #28a745; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
-        .result-box { margin-top: 20px; padding: 15px; border: 2px solid #28a745; border-radius: 15px; display: none; }
-        .product-img { width: 150px; height: 150px; object-fit: contain; margin-bottom: 10px; }
-        .price { font-size: 30px; color: #28a745; font-weight: bold; }
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; text-align: center; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; }
+        #reader { width: 100%; border-radius: 10px; margin-bottom: 15px; }
+        .product-display { margin: 15px 0; padding: 10px; border: 2px solid #eee; border-radius: 10px; display: none; }
+        .product-display img { width: 100px; height: 100px; object-fit: cover; border-radius: 5px; }
+        .cart-table { width: 100%; margin-top: 20px; }
+        .cart-table img { width: 40px; height: 40px; border-radius: 5px; }
+        .total { font-size: 24px; color: #28a745; margin: 20px 0; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>سیستەمی سکان و گەڕان</h2>
-    
-    <div class="input-group">
-        <input type="text" id="manualCode" placeholder="بارکۆدەکە لێرە بنووسە...">
-        <button onclick="checkManual()">بگەڕێ</button>
-    </div>
-
+    <h2>سکان و کڕینی کاڵا</h2>
     <div id="reader"></div>
 
-    <div id="result" class="result-box">
-        <img id="item-img" src="" class="product-img">
-        <h3 id="item-name"></h3>
-        <div id="item-price" class="price"></div>
+    <div id="scan-result" class="product-display">
+        <img id="res-img" src="">
+        <h3 id="res-name"></h3>
+        <p id="res-price"></p>
+        <button onclick="confirmAdd()" style="background:#28a745; color:white; padding:10px; border:none; border-radius:5px; width:100%;">زیادکردن بۆ سەبەتە</button>
     </div>
+
+    <table class="cart-table">
+        <tbody id="cart-items"></tbody>
+    </table>
+
+    <div class="total">کۆی گشتی: <span id="total-price">0</span> د.ک</div>
 </div>
 
 <script>
-    // لیستی کاڵاکان
+    // لێرەدا وێنەکان ببەستەرەوە بە بارکۆدەکان
     const products = {
-        "12345678": { name: "Iphone 17 Pro Max", price: "1400 دۆلار", img: "https://ibb.co/GBFQPtM.jpg" },
-        "12345678": { name: "Iphone 16 Pro Max", price: "1000 دۆلار", img: "shampoo.jpg" }
+        "12345678": { name: "Iphone 17 Pro Max", price: 10000, img: "https://ibb.co/QjzG1W0X.jpg" }, // ناوی وێنەکە وەک ئەوەی لە گێت‌هەب دایبنێ
+        "123456": { name: "شامپۆ", price: 5000, img: "shampoo.jpg" }
     };
 
-    function showProduct(code) {
-        const product = products[code];
-        const resultDiv = document.getElementById('result');
-        
-        if (product) {
-            document.getElementById('item-name').innerText = product.name;
-            document.getElementById('item-price').innerText = product.price;
-            document.getElementById('item-img').src = product.img;
-            document.getElementById('item-img').style.display = 'block';
-            resultDiv.style.display = 'block';
-            resultDiv.style.borderColor = '#28a745';
-        } else {
-            document.getElementById('item-name').innerText = "نەدۆزرایەوە: " + code;
-            document.getElementById('item-price').innerText = "ئەم کاڵایە لە لیستەکە نییە";
-            document.getElementById('item-img').style.display = 'none';
-            resultDiv.style.display = 'block';
-            resultDiv.style.borderColor = 'red';
+    let currentProduct = null;
+    let cart = [];
+
+    function onScanSuccess(decodedText) {
+        currentProduct = products[decodedText];
+        if (currentProduct) {
+            document.getElementById('scan-result').style.display = 'block';
+            document.getElementById('res-img').src = currentProduct.img;
+            document.getElementById('res-name').innerText = currentProduct.name;
+            document.getElementById('res-price').innerText = currentProduct.price + " دینار";
         }
     }
 
-    // گەڕان بە دەست
-    function checkManual() {
-        const code = document.getElementById('manualCode').value;
-        if(code) showProduct(code);
+    function confirmAdd() {
+        if (currentProduct) {
+            cart.push(currentProduct);
+            updateCart();
+            document.getElementById('scan-result').style.display = 'none';
+        }
     }
 
-    // سکان بە کامێرا
-    function onScanSuccess(decodedText) {
-        showProduct(decodedText);
+    function updateCart() {
+        const body = document.getElementById('cart-items');
+        body.innerHTML = "";
+        let total = 0;
+        cart.forEach((item) => {
+            total += item.price;
+            body.innerHTML += `<tr>
+                <td><img src="${item.img}"></td>
+                <td>${item.name}</td>
+                <td>${item.price}</td>
+            </tr>`;
+        });
+        document.getElementById('total-price').innerText = total;
     }
 
-    let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-    html5QrcodeScanner.render(onScanSuccess);
+    let scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+    scanner.render(onScanSuccess);
 </script>
 
 </body>
