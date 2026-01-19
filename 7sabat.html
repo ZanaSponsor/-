@@ -18,14 +18,13 @@
         .section { display: none; }
         .section.active { display: block; }
         input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; text-align: center; font-size: 16px; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; font-size: 16px; transition: 0.2s; }
         .btn-blue { background-color: #007bff; color: white; }
         .btn-green { background-color: #28a745; color: white; }
         .btn-orange { background-color: #ff9800; color: white; }
         .btn-red { background-color: #d9534f; color: white; }
         #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; border: 1px solid #ddd; margin-bottom: 10px; }
         .cart-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
-        .stock-info { font-size: 12px; color: #ff9800; display: block; }
         .total-box { margin-top: 15px; padding: 15px; background: #eef6ff; border-radius: 10px; text-align: center; font-size: 22px; font-weight: bold; color: #d9534f; }
         .footer { margin-top: 30px; padding: 15px; font-size: 13px; color: #777; text-align: center; width: 100%; border-top: 1px solid #ddd; }
     </style>
@@ -36,69 +35,83 @@
         <div class="header"><h1>AHMAD PHONE</h1></div>
         <div class="tab-buttons">
             <button id="btnSell" class="active" onclick="showSection('sell')">🛒 فرۆشتن</button>
-            <button id="btnAdd" onclick="showSection('add')">📦 کۆگا (Cloud)</button>
+            <button id="btnAdd" onclick="showSection('add')">📦 تۆمارکردنی کاڵا</button>
         </div>
 
         <div id="sellSection" class="section active">
             <input type="text" id="barcodeSell" placeholder="بارکۆد بنووسە">
-            <button class="btn-blue" onclick="addToCart(document.getElementById('barcodeSell').value)">➕ زیادکردن</button>
-            <button class="btn-green" onclick="startScanner('sell')">📷 سکانکردن</button>
+            <button class="btn-blue" onclick="addToCart(document.getElementById('barcodeSell').value)">➕ زیادکردن بۆ سەبەتە</button>
+            <button class="btn-green" onclick="startScanner('sell')">📷 سکانکردنی کاڵا</button>
             <div id="cartItems"></div>
             <div class="total-box" id="totalPrice">0 IQD</div>
-            <button class="btn-green" style="background:#25D366; color:white; width:100%; display:none;" id="waBtn" onclick="sendToWhatsapp()">✅ ناردنی وەصڵ</button>
-            <button class="btn-red" id="clearBtn" style="display:none; width:100%;" onclick="clearCart()">🗑️ سڕینەوە</button>
+            <button class="btn-green" style="background:#25D366; color:white; width:100%; display:none;" id="waBtn" onclick="sendToWhatsapp()">✅ ناردنی وەصڵ بۆ واتسئاپ</button>
+            <button class="btn-red" id="clearBtn" style="display:none; width:100%;" onclick="clearCart()">🗑️ سڕینەوەی هەمووی</button>
         </div>
 
         <div id="addSection" class="section">
             <input type="text" id="newBarcode" placeholder="بارکۆدی نوێ">
-            <button class="btn-green" onclick="startScanner('add')">📷 سکان</button>
+            <button class="btn-green" onclick="startScanner('add')">📷 سکانکردنی بارکۆد</button>
             <input type="text" id="newName" placeholder="ناوی کاڵا">
-            <input type="number" id="newPrice" placeholder="نرخ">
-            <input type="number" id="newStock" placeholder="بڕی کاڵا">
-            <button class="btn-orange" onclick="saveToCloud()">💾 پاشەکەوتکردن لە هەموو مۆبایلەکان</button>
+            <input type="number" id="newPrice" placeholder="نرخی فرۆشتن">
+            <input type="number" id="newStock" placeholder="بڕی کاڵا لە کۆگا">
+            <button class="btn-orange" onclick="saveData()">💾 پاشەکەوتکردن</button>
         </div>
+
         <div id="reader"></div>
     </div>
 
     <div class="footer">Produced by Zana Adam © 2026</div>
 
     <script>
-        // --- گرنگ: زانیارییەکانی خۆت لێرە دابنێ ---
+        // --- گرنگ: لینکی فایەربەیس لێرە دابنێ بۆ ئەوەی لە هەموو مۆبایلەکان کار بکات ---
         const firebaseConfig = {
-            databaseURL: "لێرە لینکی فایەربەیسەکەت دابنێ" 
+            databaseURL: "https://your-project-default-rtdb.firebaseio.com/" 
         };
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        
+        // ئەگەر فایەربەیستان نەبوو، بەرنامەکە لەسەر میمۆری ناوخۆ کار دەکات
+        let database = null;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+        } catch(e) { console.log("Firebase not connected."); }
 
-        let db = {};
+        let db = JSON.parse(localStorage.getItem('pos_backup')) || {};
         let cart = [];
 
-        // وەرگرتنی داتا لە کاتی ڕاستەقینەدا بۆ هەموو مۆبایلەکان
-        database.ref('products').on('value', (snapshot) => {
-            db = snapshot.val() || {};
-            console.log("Database Updated from Cloud");
-        });
+        // ئەگەر ئۆنلاین بیت، داتا لە کلاودەوە وەردەگرێت
+        if (database) {
+            database.ref('products').on('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    db = snapshot.val();
+                    localStorage.setItem('pos_backup', JSON.stringify(db));
+                    console.log("Data synced from Cloud.");
+                }
+            });
+        }
 
-        function saveToCloud() {
+        function saveData() {
             const b = document.getElementById('newBarcode').value.trim();
             const n = document.getElementById('newName').value.trim();
             const p = parseInt(document.getElementById('newPrice').value);
             const s = parseInt(document.getElementById('newStock').value);
 
             if(b && n && p && !isNaN(s)) {
-                database.ref('products/' + b).set({
-                    name: n, price: p, stock: s
-                }).then(() => {
-                    alert("تۆمار کرا و بۆ هەموو مۆبایلەکان نێردرا!");
-                    document.getElementById('addSection').querySelectorAll('input').forEach(i => i.value = "");
-                });
-            }
+                db[b] = { name: n, price: p, stock: s };
+                localStorage.setItem('pos_backup', JSON.stringify(db));
+                
+                if (database) {
+                    database.ref('products/' + b).set(db[b]);
+                }
+                
+                alert("بە سەرکەوتوویی پاشەکەوت کرا!");
+                document.getElementById('addSection').querySelectorAll('input').forEach(i => i.value = "");
+            } else { alert("تکایە هەموو زانیارییەکان پڕ بکەرەوە."); }
         }
 
         function addToCart(barcode) {
             const b = barcode.trim();
             if (db[b]) {
-                if (db[b].stock <= 0) { alert("نەماوە!"); return; }
+                if (db[b].stock <= 0) { alert("لە کۆگا نەماوە!"); return; }
                 const existing = cart.find(i => i.barcode === b);
                 if (existing) {
                     if (existing.qty < db[b].stock) existing.qty += 1;
@@ -107,7 +120,7 @@
                     cart.push({ barcode: b, name: db[b].name, price: db[b].price, qty: 1 });
                 }
                 updateUI();
-            } else { alert("تۆمار نەکراوە!"); }
+            } else { alert("ئەم بارکۆدە تۆمار نەکراوە!"); }
         }
 
         function updateUI() {
@@ -129,13 +142,13 @@
         function sendToWhatsapp() {
             let itemsText = "";
             let total = 0;
-            cart.forEach((item, index) => {
+            cart.forEach((item) => {
                 total += (item.price * item.qty);
-                // کەمکردنەوە لە کلاود
-                let newStock = db[item.barcode].stock - item.qty;
-                database.ref('products/' + item.barcode).update({ stock: newStock });
-                itemsText += `${index+1}- ${item.name} (${item.qty})%0A`;
+                db[item.barcode].stock -= item.qty;
+                if (database) database.ref('products/' + item.barcode).update({ stock: db[item.barcode].stock });
+                itemsText += `- ${item.name} (${item.qty} دانە)%0A`;
             });
+            localStorage.setItem('pos_backup', JSON.stringify(db));
 
             const message = `📋 *وەصڵ - AHMAD PHONE*%0A------------------%0A${itemsText}------------------%0A💰 *کۆ: ${total.toLocaleString()} IQD*%0A✍️ Zana Adam`;
             window.open(`https://wa.me/9647510074008?text=${message}`, '_blank');
