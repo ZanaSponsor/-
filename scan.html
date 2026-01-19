@@ -4,100 +4,100 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>سیستەمی فرۆشتنی زانا</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body { font-family: sans-serif; background: #f4f7f6; padding: 20px; text-align: center; }
         .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        #reader { width: 100%; border-radius: 10px; margin-bottom: 15px; }
         
-        /* شێوازی خانەی نووسین */
-        .manual-input { display: flex; gap: 5px; margin-bottom: 20px; }
-        input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
-        .add-btn { background: #007bff; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; }
+        .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        input { padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; text-align: center; }
+        .add-btn { background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
         .cart-table { width: 100%; margin-top: 20px; border-collapse: collapse; }
         .cart-table th, .cart-table td { border-bottom: 1px solid #eee; padding: 10px; text-align: right; }
         .cart-table img { width: 50px; height: 50px; object-fit: cover; border-radius: 5px; }
         
-        .total { font-size: 24px; color: #28a745; margin-top: 20px; font-weight: bold; }
+        .total { font-size: 26px; color: #28a745; margin-top: 20px; font-weight: bold; background: #e8f5e9; padding: 10px; border-radius: 10px; }
+        .delete-btn { color: red; border: none; background: none; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>سیستەمی سکان و نووسین</h2>
+    <h2>بەڕێوەبردنی فرۆشتن</h2>
     
-    <div class="manual-input">
-        <input type="text" id="barcodeField" placeholder="بارکۆدەکە لێرە بنووسە...">
-        <button class="add-btn" onclick="addByText()">زیادکردن</button>
+    <div class="input-group">
+        <input type="text" id="itemCode" placeholder="کۆدی کاڵا بنووسە (بۆ نموونە: 101)">
+        <button class="add-btn" onclick="addItem()">زیادکردن بۆ پسووڵە</button>
     </div>
-
-    <div id="reader"></div>
 
     <table class="cart-table">
         <thead>
             <tr>
                 <th>وێنە</th>
-                <th>کاڵا</th>
+                <th>ناونیشان</th>
                 <th>نرخ</th>
+                <th>لادان</th>
             </tr>
         </thead>
         <tbody id="cart-items"></tbody>
     </table>
 
     <div class="total">کۆی گشتی: <span id="total-price">0</span> د.ک</div>
+    <button onclick="clearCart()" style="margin-top:15px; background:#6c757d; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">پاککردنەوەی پسووڵە</button>
 </div>
 
 <script>
-    // لیستی کاڵاکانت (دڵنیابە وێنەکان لە گێت‌هەب ئاپلۆد کراون)
+    // لێرە کاڵاکانت بە ناو و کۆد و وێنە دابنێ
     const products = {
-        "1234567": { name: "Herman Oats", price: 10000, img: "https://ibb.co/QjzG1W0X.jpg" },
-        "123456": { name: "شامپۆ", price: 5000, img: "shampoo.jpg" }
+        "y9s,y6s": { name: "هێرمان White Oats", price: 10000, img: "herman.jpg" },
+        "102": { name: "شامپۆ", price: 5000, img: "shampoo.jpg" },
+        "103": { name: "سابوون", price: 1500, img: "soap.jpg" }
     };
 
     let cart = [];
 
-    // فەنکشن بۆ زیادکردنی کاڵا
-    function addItem(code) {
+    function addItem() {
+        const code = document.getElementById('itemCode').value;
         const product = products[code];
+
         if (product) {
             cart.push(product);
             updateUI();
-            document.getElementById('barcodeField').value = ""; // خانەکە پاک بکەرەوە
+            document.getElementById('itemCode').value = ""; // شوێنەکە پاک بکەرەوە
         } else {
-            alert("ئەم بارکۆدە لە لیستەکەدا نییە: " + code);
+            alert("ئەم کۆدە بوونی نییە!");
         }
-    }
-
-    // زیادکردن بە نووسین
-    function addByText() {
-        const code = document.getElementById('barcodeField').value;
-        if(code) addItem(code);
-    }
-
-    // زیادکردن بە سکان
-    function onScanSuccess(decodedText) {
-        addItem(decodedText);
     }
 
     function updateUI() {
         const list = document.getElementById('cart-items');
         list.innerHTML = "";
         let total = 0;
-        cart.forEach(item => {
+
+        cart.forEach((item, index) => {
             total += item.price;
             list.innerHTML += `
                 <tr>
-                    <td><img src="${item.img}"></td>
+                    <td><img src="${item.img}" onerror="this.src='https://via.placeholder.com/50'"></td>
                     <td>${item.name}</td>
                     <td>${item.price.toLocaleString()} د.ک</td>
+                    <td><button class="delete-btn" onclick="removeItem(${index})">✖</button></td>
                 </tr>`;
         });
         document.getElementById('total-price').innerText = total.toLocaleString();
     }
 
-    let scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-    scanner.render(onScanSuccess);
+    function removeItem(index) {
+        cart.splice(index, 1);
+        updateUI();
+    }
+
+    function clearCart() {
+        if(confirm("دڵنیای لە سڕینەوەی هەموو پسووڵەکە؟")) {
+            cart = [];
+            updateUI();
+        }
+    }
 </script>
 
 </body>
