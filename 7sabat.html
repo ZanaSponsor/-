@@ -29,7 +29,6 @@
         
         .search-results { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: none; }
         .search-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; text-align: right; font-size: 14px; display: flex; justify-content: space-between; }
-        .search-item:hover { background: #f0f7ff; }
 
         button { width: 100%; padding: 14px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-bottom: 10px; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-blue { background: var(--primary); color: white; }
@@ -38,14 +37,14 @@
         .btn-outline { background: #f8f9fa; border: 2px solid #ddd; color: #555; }
 
         .cart-item { background: #f9fbff; padding: 12px; border-radius: 15px; margin-bottom: 8px; border-right: 5px solid var(--primary); }
+        .item-info { display: flex; flex-direction: column; }
+        .stock-info { font-size: 11px; color: #666; margin-top: 2px; }
         .price-edit { width: 95px !important; padding: 5px !important; margin: 0 !important; color: var(--danger); font-weight: bold; text-align: center; }
 
         .total-container { margin-top: 15px; padding: 15px; background: #fff5f5; border-radius: 15px; text-align: center; border: 2px solid #ffdada; }
         .total-amount { font-size: 26px; font-weight: bold; color: var(--danger); }
         
-        .history-card { background: #fff; border: 1px solid #eee; padding: 12px; border-radius: 15px; margin-bottom: 10px; font-size: 13px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .history-header { display: flex; justify-content: space-between; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; margin-bottom: 5px; color: var(--primary); font-weight: bold; }
-        
+        .history-card { background: #fff; border: 1px solid #eee; padding: 12px; border-radius: 15px; margin-bottom: 10px; font-size: 13px; }
         #reader { width: 100%; border-radius: 15px; overflow: hidden; display: none; margin-bottom: 15px; border: 3px solid var(--primary); }
     </style>
 </head>
@@ -66,7 +65,7 @@
 
         <div id="sellSection" class="section active">
             <div class="search-container">
-                <input type="text" id="barcodeSell" placeholder="لێرە بگەڕێ (ناو یان بارکۆد)" oninput="advancedSearch(this.value)">
+                <input type="text" id="barcodeSell" placeholder="گەڕان بە ناو یان بارکۆد" oninput="advancedSearch(this.value)">
                 <div id="searchResults" class="search-results"></div>
             </div>
             <button class="btn-outline" onclick="startScanner('sell')">📷 سکانکردنی بارکۆد</button>
@@ -77,11 +76,12 @@
         </div>
 
         <div id="addSection" class="section">
-            <input type="text" id="newBar" placeholder="بارکۆد">
+            <input type="text" id="newBar" placeholder="بارکۆدی نوێ">
+            <button class="btn-outline" onclick="startScanner('add')">📷 سکانی بارکۆد</button>
             <input type="text" id="newName" placeholder="ناوی کاڵا">
             <input type="number" id="newPrice" placeholder="نرخ">
-            <input type="number" id="newStock" placeholder="بڕ">
-            <button class="btn-blue" onclick="saveToDB()">💾 پاشەکەوتکردن</button>
+            <input type="number" id="newStock" placeholder="بڕی ستۆک">
+            <button class="btn-blue" onclick="saveToDB()">💾 پاشەکەوتکردنی کاڵا</button>
         </div>
 
         <div id="historySection" class="section">
@@ -94,6 +94,7 @@
 
     <script>
         const beep = new Audio("https://www.soundjay.com/buttons/beep-07a.mp3");
+        const waNumber = "9647503991323";
 
         const initialData = {
             "6926081469953": { name: "LK150S TYPE_C / MICRO", price: 3000, stock: 50 },
@@ -132,7 +133,7 @@
                 resultsDiv.innerHTML = matches.map(key => `
                     <div class="search-item" onclick="selectItem('${key}')">
                         <span>${db[key].name}</span>
-                        <span style="color:var(--primary)">${db[key].price.toLocaleString()} IQD</span>
+                        <span style="color:var(--primary)">📦 ${db[key].stock} ماوە</span>
                     </div>`).join('');
                 resultsDiv.style.display = "block";
             } else { resultsDiv.style.display = "none"; }
@@ -148,10 +149,9 @@
             if (db[code]) {
                 if (db[code].stock <= 0) { alert("لە ستۆک نەماوە!"); return; }
                 const found = cart.find(i => i.code === code);
-                if (found) found.qty++; 
-                else cart.push({ code: code, name: db[code].name, price: db[code].price, qty: 1 });
-                beep.play();
-                renderCart();
+                if (found) { if (found.qty < db[code].stock) found.qty++; else alert("بڕی زیاتر نییە!"); } 
+                else { cart.push({ code: code, name: db[code].name, price: db[code].price, qty: 1 }); }
+                beep.play(); renderCart();
             }
         }
 
@@ -162,7 +162,10 @@
                 total += (item.price * item.qty);
                 container.innerHTML += `<div class="cart-item">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span><b>${item.qty}x</b> ${item.name}</span>
+                        <div class="item-info">
+                            <span><b>${item.qty}x</b> ${item.name}</span>
+                            <span class="stock-info">📦 بڕی ماوە لە ستۆک: ${db[item.code].stock}</span>
+                        </div>
                         <input type="number" class="price-edit" value="${item.price}" onchange="updatePrice(${idx}, this.value)">
                     </div></div>`;
             });
@@ -186,20 +189,16 @@
             history.unshift({ date: dateStr, items: itemsText.replace(/%0A/g, ', '), total: total });
             localStorage.setItem('ahmad_pos_db', JSON.stringify(db));
             localStorage.setItem('ahmad_pos_history', JSON.stringify(history));
-            
-            // ژمارە نوێیەکەی واتسئاپ
-            const waNumber = "9647503991323";
             window.open(`https://wa.me/${waNumber}?text=✅ فرۆشرا - مۆبایلی ئەحمەد%0A📅 ${dateStr}%0A------------------%0A${itemsText}💰 کۆی گشتی: ${total.toLocaleString()} IQD`, '_blank');
-            
             cart = []; renderCart();
         }
 
         function renderHistory() {
             const container = document.getElementById('historyList');
-            if (history.length === 0) { container.innerHTML = "<p style='text-align:center; color:#888;'>هیچ مێژوویەک نییە</p>"; return; }
+            if (history.length === 0) { container.innerHTML = "<p style='text-align:center;'>مێژوو خاڵییە</p>"; return; }
             container.innerHTML = history.map(h => `<div class="history-card">
-                <div class="history-header"><span>📅 ${h.date}</span><span>${h.total.toLocaleString()} IQD</span></div>
-                <div style="color:#555;">${h.items}</div></div>`).join('');
+                <div style="display:flex; justify-content:space-between; font-weight:bold; color:var(--primary);"><span>${h.date}</span><span>${h.total.toLocaleString()}</span></div>
+                <div style="color:#555; font-size:12px;">${h.items}</div></div>`).join('');
         }
 
         function clearHistory() { if(confirm("مێژوو بسڕێتەوە؟")) { history = []; localStorage.setItem('ahmad_pos_history', JSON.stringify(history)); renderHistory(); } }
@@ -225,9 +224,10 @@
             }
         }
 
+        let scanner;
         function startScanner(target) {
             const r = document.getElementById('reader'); r.style.display = "block";
-            const scanner = new Html5Qrcode("reader");
+            scanner = new Html5Qrcode("reader");
             scanner.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (text) => {
                 if(target === 'sell') addToCart(text); else document.getElementById('newBar').value = text;
                 scanner.stop(); r.style.display = "none";
