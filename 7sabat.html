@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AHMAD PHONE - POS Professional</title>
+    <title>AHMAD PHONE - POS</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { --primary: #007bff; --success: #28a745; --danger: #d9534f; --dark: #343a40; --bg: #f0f2f5; }
+        :root { --primary: #007bff; --success: #28a745; --danger: #d9534f; --bg: #f4f7f6; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 480px; background: white; padding: 20px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); box-sizing: border-box; }
         
@@ -16,19 +16,23 @@
         .brand-desc { color: #555; font-size: 12px; margin-top: 5px; font-weight: 500; }
 
         .tabs { display: flex; gap: 5px; margin-bottom: 20px; }
-        .tabs button { flex: 1; padding: 10px 5px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; background: #e4e6eb; transition: 0.3s; font-size: 13px; }
+        .tabs button { flex: 1; padding: 12px 5px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; background: #e4e6eb; transition: 0.3s; font-size: 14px; }
         .tabs button.active { background: var(--primary); color: white; }
         
         .section { display: none; animation: fadeIn 0.4s; }
         .section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+        .search-container { position: relative; }
         input { width: 100%; padding: 14px; margin: 8px 0; border: 2px solid #eee; border-radius: 12px; box-sizing: border-box; text-align: center; font-size: 16px; outline: none; }
+        input:focus { border-color: var(--primary); }
         
-        .search-results { background: white; border: 1px solid #ddd; border-radius: 10px; max-height: 150px; overflow-y: auto; display: none; margin-bottom: 10px; }
-        .search-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; text-align: right; font-size: 14px; }
+        .search-results { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: none; }
+        .search-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; text-align: right; font-size: 14px; display: flex; justify-content: space-between; }
+        .search-item:hover { background: #f0f7ff; }
+        .search-item .stock-info { font-size: 11px; color: var(--danger); }
 
-        button { width: 100%; padding: 14px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-bottom: 10px; font-size: 15px; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-bottom: 10px; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-blue { background: var(--primary); color: white; }
         .btn-green { background: var(--success); color: white; }
         .btn-red { background: var(--danger); color: white; }
@@ -40,7 +44,6 @@
         .total-container { margin-top: 15px; padding: 15px; background: #fff5f5; border-radius: 15px; text-align: center; border: 2px solid #ffdada; }
         .total-amount { font-size: 26px; font-weight: bold; color: var(--danger); }
         
-        /* ستایلی مێژوو */
         .history-card { background: #fff; border: 1px solid #eee; padding: 12px; border-radius: 15px; margin-bottom: 10px; font-size: 13px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .history-header { display: flex; justify-content: space-between; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; margin-bottom: 5px; color: var(--primary); font-weight: bold; }
         
@@ -63,26 +66,35 @@
         </div>
 
         <div id="sellSection" class="section active">
-            <input type="text" id="barcodeSell" placeholder="ناوی کاڵا یان بارکۆد" oninput="searchProduct(this.value)">
-            <div id="searchResults" class="search-results"></div>
+            <div class="search-container">
+                <input type="text" id="barcodeSell" placeholder="لێرە بگەڕێ بەپێی ناو یان بارکۆد" oninput="advancedSearch(this.value)">
+                <div id="searchResults" class="search-results"></div>
+            </div>
+            
             <button class="btn-outline" onclick="startScanner('sell')">📷 سکانکردنی بارکۆد</button>
+            
             <div id="cartItems"></div>
-            <div class="total-container"><div class="total-amount" id="totalPrice">0 IQD</div></div>
+            
+            <div class="total-container">
+                <div class="total-amount" id="totalPrice">0 IQD</div>
+            </div>
+            
             <button class="btn-green" id="btnDone" style="display:none; margin-top:10px;" onclick="finishSale()">✅ کڕین ئەنجام درا</button>
-            <button class="btn-red" id="btnDel" style="display:none;" onclick="emptyCart()">🗑️ پاککردنەوە</button>
+            <button class="btn-red" id="btnDel" style="display:none;" onclick="emptyCart()">🗑️ پاککردنەوەی سەبەتە</button>
         </div>
 
         <div id="addSection" class="section">
-            <input type="text" id="newBar" placeholder="بارکۆد">
+            <input type="text" id="newBar" placeholder="بارکۆد بنووسە یان سکان بکە">
+            <button class="btn-outline" onclick="startScanner('add')">📷 سکانکردن</button>
             <input type="text" id="newName" placeholder="ناوی کاڵا">
-            <input type="number" id="newPrice" placeholder="نرخ">
-            <input type="number" id="newStock" placeholder="بڕ">
-            <button class="btn-blue" onclick="saveToDB()">💾 تۆمارکردن</button>
+            <input type="number" id="newPrice" placeholder="نرخی فرۆشتن">
+            <input type="number" id="newStock" placeholder="بڕی ناو ستۆک">
+            <button class="btn-blue" onclick="saveToDB()">💾 تۆمارکردن لە ستۆک</button>
         </div>
 
         <div id="historySection" class="section">
             <div id="historyList"></div>
-            <button class="btn-red" onclick="clearHistory()" style="margin-top:20px; background:#666;">🗑️ سڕینەوەی هەموو مێژوو</button>
+            <button class="btn-red" onclick="clearHistory()" style="margin-top:20px; background:#666;">🗑️ سڕینەوەی مێژووی فرۆشتن</button>
         </div>
 
         <div id="reader"></div>
@@ -94,31 +106,62 @@
         let history = JSON.parse(localStorage.getItem('ahmad_pos_history')) || [];
         let cart = [];
 
-        function searchProduct(val) {
+        // گەڕانی پێشکەوتوو بۆ ناو و بارکۆد
+        function advancedSearch(val) {
             const resultsDiv = document.getElementById('searchResults');
-            if (val.length < 1) { resultsDiv.style.display = "none"; return; }
-            const matches = Object.keys(db).filter(k => db[k].name.toLowerCase().includes(val.toLowerCase()) || k.includes(val));
-            resultsDiv.innerHTML = matches.map(k => `<div class="search-item" onclick="selectFromSearch('${k}')">${db[k].name} - ${db[k].price}</div>`).join('');
-            resultsDiv.style.display = matches.length > 0 ? "block" : "none";
+            if (val.trim().length === 0) { resultsDiv.style.display = "none"; return; }
+            
+            const matches = Object.keys(db).filter(key => 
+                db[key].name.toLowerCase().includes(val.toLowerCase()) || key.includes(val)
+            );
+
+            if (matches.length > 0) {
+                resultsDiv.innerHTML = matches.map(key => `
+                    <div class="search-item" onclick="selectItem('${key}')">
+                        <span>${db[key].name}</span>
+                        <span class="stock-info">📦 ${db[key].stock} دانە</span>
+                    </div>
+                `).join('');
+                resultsDiv.style.display = "block";
+            } else {
+                resultsDiv.style.display = "none";
+            }
         }
 
-        function selectFromSearch(key) { addToCart(key); document.getElementById('searchResults').style.display = "none"; document.getElementById('barcodeSell').value = ""; }
+        function selectItem(key) {
+            addToCart(key);
+            document.getElementById('searchResults').style.display = "none";
+            document.getElementById('barcodeSell').value = "";
+        }
 
         function addToCart(code) {
             if (db[code]) {
-                if (db[code].stock <= 0) { alert("لە ستۆک نەماوە!"); return; }
+                if (db[code].stock <= 0) { alert("ببوورە لە ستۆک نەماوە!"); return; }
                 const found = cart.find(i => i.code === code);
-                if (found) found.qty++; else cart.push({ code: code, name: db[code].name, price: db[code].price, qty: 1 });
-                beep.play(); renderCart();
+                if (found) {
+                    if (found.qty < db[code].stock) found.qty++;
+                    else alert("بڕی زیاتر لە ستۆک نییە!");
+                } else {
+                    cart.push({ code: code, name: db[code].name, price: db[code].price, qty: 1 });
+                }
+                beep.play();
+                renderCart();
             }
         }
 
         function renderCart() {
-            const container = document.getElementById('cartItems'); container.innerHTML = "";
+            const container = document.getElementById('cartItems');
+            container.innerHTML = "";
             let total = 0;
             cart.forEach((item, idx) => {
                 total += (item.price * item.qty);
-                container.innerHTML += `<div class="cart-item"><div class="item-main"><span><b>${item.qty}x</b> ${item.name}</span><input type="number" class="price-edit" value="${item.price}" onchange="updatePrice(${idx}, this.value)"></div></div>`;
+                container.innerHTML += `
+                    <div class="cart-item">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span><b>${item.qty}x</b> ${item.name}</span>
+                            <input type="number" class="price-edit" value="${item.price}" onchange="updatePrice(${idx}, this.value)">
+                        </div>
+                    </div>`;
             });
             document.getElementById('totalPrice').innerText = total.toLocaleString() + " IQD";
             document.getElementById('btnDone').style.display = cart.length > 0 ? "block" : "none";
@@ -126,43 +169,40 @@
         }
 
         function updatePrice(idx, val) { cart[idx].price = parseInt(val) || 0; renderCart(); }
-        function emptyCart() { cart = []; renderCart(); }
+        function emptyCart() { if(confirm("سەبەتەکە پاک بکرێتەوە؟")) { cart = []; renderCart(); } }
 
         function finishSale() {
             const now = new Date();
             const dateStr = now.toLocaleDateString('ku-IQ') + " " + now.toLocaleTimeString('ku-IQ');
             let total = 0;
-            let itemsReport = [];
+            let itemsText = "";
 
             cart.forEach(i => {
                 total += (i.price * i.qty);
-                itemsReport.push(`${i.name} (${i.qty})`);
+                itemsText += `• ${i.name} (${i.qty})%0A`;
                 db[i.code].stock -= i.qty;
             });
 
-            // زانیاری بۆ مێژوو
-            const saleRecord = { date: dateStr, items: itemsReport.join(', '), total: total };
-            history.unshift(saleRecord); // زیادکردن بۆ سەرەوەی لیستەکە
-            
+            history.unshift({ date: dateStr, items: itemsText.replace(/%0A/g, ', '), total: total });
             localStorage.setItem('ahmad_pos_db', JSON.stringify(db));
             localStorage.setItem('ahmad_pos_history', JSON.stringify(history));
 
-            window.open(`https://wa.me/9647510074008?text=✅ کڕین ئەنجام درا%0A📅 ${dateStr}%0A💰 کۆی گشتی: ${total.toLocaleString()} IQD`, '_blank');
-            cart = []; renderCart(); renderHistory();
+            window.open(`https://wa.me/9647510074008?text=✅ کڕین ئەنجام درا - مۆبایلی ئەحمەد%0A📅 ${dateStr}%0A------------------%0A${itemsText}💰 کۆی گشتی: ${total.toLocaleString()} IQD`, '_blank');
+            cart = []; renderCart();
         }
 
         function renderHistory() {
             const container = document.getElementById('historyList');
-            if (history.length === 0) { container.innerHTML = "<p style='text-align:center; color:#888;'>هیچ مێژوویەک نییە</p>"; return; }
+            if (history.length === 0) { container.innerHTML = "<p style='text-align:center; color:#888;'>هیچ مێژوویەک تۆمار نەکراوە</p>"; return; }
             container.innerHTML = history.map(h => `
                 <div class="history-card">
                     <div class="history-header"><span>📅 ${h.date}</span><span>${h.total.toLocaleString()} IQD</span></div>
-                    <div style="color:#555;">${h.items}</div>
+                    <div style="color:#555; margin-top:5px;">${h.items}</div>
                 </div>
             `).join('');
         }
 
-        function clearHistory() { if(confirm("ئایا هەموو مێژوو بسڕێتەوە؟")) { history = []; localStorage.setItem('ahmad_pos_history', JSON.stringify(history)); renderHistory(); } }
+        function clearHistory() { if(confirm("هەموو مێژووی فرۆشتن بسڕێتەوە؟")) { history = []; localStorage.setItem('ahmad_pos_history', JSON.stringify(history)); renderHistory(); } }
 
         function switchTab(t) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -180,7 +220,8 @@
             if(b && n && p) {
                 db[b] = { name: n, price: parseInt(p), stock: parseInt(s) || 0 };
                 localStorage.setItem('ahmad_pos_db', JSON.stringify(db));
-                alert("تۆمارکرا ✅");
+                alert("بە سەرکەوتوویی پاشەکەوت کرا ✅");
+                document.getElementById('newBar').value = ""; document.getElementById('newName').value = "";
             }
         }
 
