@@ -24,22 +24,14 @@
         .btn-blue { background-color: #007bff; color: white; }
         .btn-green { background-color: #28a745; color: white; }
         .btn-orange { background-color: #ff9800; color: white; }
+        .btn-red { background-color: #d9534f; color: white; margin-top: 5px; font-size: 14px; }
         
         #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; border: 1px solid #ddd; margin-bottom: 10px; }
-        .cart-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
+        .cart-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f9f9f9; font-size: 14px; align-items: center; }
         .total-box { margin-top: 15px; padding: 15px; background: #eef6ff; border-radius: 10px; text-align: center; font-size: 20px; font-weight: bold; color: #d9534f; }
         .whatsapp-btn { background-color: #25D366; color: white; margin-top: 10px; }
 
-        /* ستایلی مافی بەرهەمهێنان */
-        .footer {
-            margin-top: 30px;
-            padding: 15px;
-            font-size: 13px;
-            color: #777;
-            text-align: center;
-            width: 100%;
-            border-top: 1px solid #ddd;
-        }
+        .footer { margin-top: 30px; padding: 15px; font-size: 13px; color: #777; text-align: center; width: 100%; border-top: 1px solid #ddd; }
     </style>
 </head>
 <body>
@@ -58,13 +50,15 @@
             <input type="text" id="barcodeSell" placeholder="بارکۆد سکان بکە یان بنووسە">
             <button class="btn-blue" onclick="addToCart(document.getElementById('barcodeSell').value)">➕ زیادکردن</button>
             <button class="btn-green" onclick="startScanner('sell')">📷 سکانکردنی بارکۆد</button>
+            
             <div id="cartItems"></div>
             <div class="total-box" id="totalPrice">0 IQD</div>
+            
             <button class="whatsapp-btn" id="waBtn" style="display:none;" onclick="sendToWhatsapp()">✅ ناردنی وەصڵ بۆ واتسئاپ</button>
+            <button class="btn-red" id="clearBtn" style="display:none;" onclick="clearCart()">🗑️ سڕینەوەی سەبەتە</button>
         </div>
 
         <div id="addSection" class="section">
-            <p style="font-size: 13px; color: #666; text-align: center;">لێرە بارکۆدی نوێ و نرخ زیاد بکە بۆ ناو مۆبایلەکەت.</p>
             <input type="text" id="newBarcode" placeholder="بارکۆدی کاڵا">
             <button class="btn-green" style="margin-bottom:5px;" onclick="startScanner('add')">📷 سکانکردنی بارکۆد</button>
             <input type="text" id="newName" placeholder="ناوی کاڵا">
@@ -80,7 +74,6 @@
     </div>
 
     <script>
-        // لودکردنی داتابەیس لە میمۆری مۆبایل
         let db = JSON.parse(localStorage.getItem('ahmad_phone_db')) || {
             "6926081469953": { name: "LK150S (TYPE_C/MICRO)", price: 3000 },
             "6975011272217": { name: "GERLAX L36T TYPE_C", price: 6000 },
@@ -105,17 +98,14 @@
             const barcode = document.getElementById('newBarcode').value.trim();
             const name = document.getElementById('newName').value.trim();
             const price = parseInt(document.getElementById('newPrice').value);
-
             if(barcode && name && price) {
                 db[barcode] = { name: name, price: price };
                 localStorage.setItem('ahmad_phone_db', JSON.stringify(db));
-                alert("کاڵای " + name + " بە سەرکەوتوویی تۆمار کرا!");
+                alert("کاڵای " + name + " تۆمار کرا!");
                 document.getElementById('newBarcode').value = "";
                 document.getElementById('newName').value = "";
                 document.getElementById('newPrice').value = "";
-            } else {
-                alert("تکایە هەموو خانەکان پڕ بکەرەوە");
-            }
+            } else { alert("خانەکان پڕ بکەرەوە"); }
         }
 
         function addToCart(barcode) {
@@ -126,8 +116,13 @@
                 else { cart.push({ barcode: b, name: db[b].name, price: db[b].price, qty: 1 }); }
                 updateCartUI();
                 document.getElementById('barcodeSell').value = "";
-            } else {
-                alert("ئەم بارکۆدە نەدۆزرایەوە! سەرەتا تۆماری بکە.");
+            } else { alert("بارکۆدەکە نەدۆزرایەوە!"); }
+        }
+
+        function clearCart() {
+            if(confirm("ئایا دڵنیایت لە سڕینەوەی هەموو سەبەتەکە؟")) {
+                cart = [];
+                updateCartUI();
             }
         }
 
@@ -144,7 +139,9 @@
                 </div>`;
             });
             document.getElementById('totalPrice').innerText = total.toLocaleString() + " IQD";
-            document.getElementById('waBtn').style.display = cart.length > 0 ? "block" : "none";
+            const show = cart.length > 0;
+            document.getElementById('waBtn').style.display = show ? "block" : "none";
+            document.getElementById('clearBtn').style.display = show ? "block" : "none";
         }
 
         function sendToWhatsapp() {
@@ -157,8 +154,6 @@
             });
             const message = `📋 *وەصڵی فرۆشتن - AHMAD PHONE*%0A--------------------------%0A${itemsText}--------------------------%0A💰 *کۆیی گشتی:* ${total.toLocaleString()} IQD%0A✍️ *بەرھەمھێنەر:* Zana Adam`;
             window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-            cart = []; // پاککردنەوەی سەبەتە دوای ناردن
-            updateCartUI();
         }
 
         let html5QrCode;
@@ -168,11 +163,8 @@
             html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 },
                 (decodedText) => {
-                    if(mode === 'sell') {
-                        addToCart(decodedText);
-                    } else {
-                        document.getElementById('newBarcode').value = decodedText;
-                    }
+                    if(mode === 'sell') { addToCart(decodedText); } 
+                    else { document.getElementById('newBarcode').value = decodedText; }
                     html5QrCode.stop();
                     readerDiv.style.display = "none";
                 }
