@@ -3,60 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zana Store - Easy Access</title>
+    <title>Zana Store Pro</title>
     <link href="https://fonts.cdnfonts.com/css/rabar" rel="stylesheet">
     <style>
-        :root { --p: #1e3a8a; --s: #22c55e; --bg: #f1f5f9; --reject: #dc2626; }
-        body { font-family: 'Rabar', sans-serif; background: var(--bg); margin: 0; }
-        .container { max-width: 500px; margin: auto; padding: 15px; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-family: 'Rabar'; text-align: center; font-size: 1.1rem; }
-        .btn { padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-family: 'Rabar'; width: 100%; font-weight: bold; color: white; transition: 0.3s; }
-        .btn-p { background: var(--p); }
-        .btn-s { background: var(--s); }
-        .btn-reject { background: var(--reject); }
-        .product { border-bottom: 1px solid #eee; padding: 15px 0; display: flex; justify-content: space-between; align-items: center; }
-        .status { padding: 4px 8px; border-radius: 5px; font-size: 12px; font-weight: bold; }
-        .pending { background: #fff3cd; color: #856404; }
-        .completed { background: #d4edda; color: #155724; }
-        .rejected { background: #f8d7da; color: #721c24; }
+        :root { --p: #1e3a8a; --s: #22c55e; --bg: #f1f5f9; --reject: #dc2626; --fastpay: #e31e24; }
+        body { font-family: 'Rabar', sans-serif; background: var(--bg); margin: 0; color: #334155; }
+        .container { max-width: 600px; margin: auto; padding: 15px; }
+        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; font-family: 'Rabar'; }
+        .btn { padding: 12px; border: none; border-radius: 12px; cursor: pointer; font-family: 'Rabar'; width: 100%; font-weight: bold; color: white; transition: 0.3s; }
+        .btn-p { background: var(--p); } .btn-s { background: var(--s); } .btn-r { background: var(--reject); }
+        .item-row { border-bottom: 1px solid #eee; padding: 15px 0; display: flex; justify-content: space-between; align-items: center; }
+        .status { padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; }
+        .pending { background: #fef3c7; color: #92400e; }
+        .completed { background: #dcfce7; color: #166534; }
+        .rejected { background: #fee2e2; color: #991b1b; }
+        #pay-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="auth-ui" class="card" style="text-align:center;">
-        <h2 style="color:var(--p); margin-bottom:5px;">ZANA STORE</h2>
-        <p style="color:gray; font-size:14px;">بۆ دەستپێکردن ژمارەکەت بنووسە</p>
-        <input type="number" id="userPhone" placeholder="0750 000 0000">
-        <button class="btn btn-p" onclick="startApp()">چوونە ناو فڕۆشگا</button>
+        <h2 style="color:var(--p);">ZANA STORE</h2>
+        <input type="number" id="userPhone" placeholder="ژمارەی مۆبایل بنووسە">
+        <button class="btn btn-p" onclick="startApp()">چوونە ناوەوە</button>
     </div>
 
     <div id="store-ui" style="display:none;">
         <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-            <span>بەخێرهاتی: <b id="displayPhone"></b></span>
-            <button onclick="location.reload()" class="btn btn-reject" style="width:auto; padding:5px 10px;">گۆڕینی ژمارە</button>
+            <span>📞 <b id="displayPhone"></b></span>
+            <button onclick="location.reload()" class="btn btn-r" style="width:auto; padding:5px 15px;">دەرچوون</button>
         </div>
 
         <div class="card">
-            <h3>🎮 داواکردنی UC</h3>
-            <div class="product"><span>60 UC - 1,500 د.ک</span> <button class="btn btn-s" style="width:auto;" onclick="sendOrder('60 UC')">داواکردن</button></div>
-            <div class="product"><span>325 UC - 7,250 د.ک</span> <button class="btn btn-s" style="width:auto;" onclick="sendOrder('325 UC')">داواکردن</button></div>
-            <div class="product"><span>660 UC - 14,500 د.ک</span> <button class="btn btn-s" style="width:auto;" onclick="sendOrder('660 UC')">داواکردن</button></div>
+            <h3>🎮 کاڵاکانی بەردەست</h3>
+            <div id="product-list">باردەکرێت...</div>
         </div>
 
         <div class="card">
-            <h3>📜 بارودۆخی داواکارییەکانت</h3>
-            <div id="user-orders">باردەکرێت...</div>
+            <h3>📜 مێژووی مامەڵەکان</h3>
+            <div id="user-history"></div>
         </div>
     </div>
 
     <div id="admin-ui" style="display:none;">
         <div class="card" style="background:var(--p); color:white;">
-            <h3 style="margin:0;">پانێڵی بەڕێوبەر (ZANA)</h3>
-            <button onclick="location.reload()" class="btn" style="background:white; color:black; margin-top:10px; padding:5px;">دەرچوون</button>
+            <h3>بەڕێوبەری زانا</h3>
+            <button onclick="location.reload()" class="btn" style="background:white; color:black;">دەرچوون</button>
         </div>
-        <div id="admin-list">باردەکرێت...</div>
+        
+        <div class="card">
+            <h4>➕ زیادکردنی کاڵا</h4>
+            <input type="text" id="prodName" placeholder="ناوی کاڵا (بۆ نموونە: 60 UC)">
+            <input type="number" id="prodPrice" placeholder="نرخ (بۆ نموونە: 1500)">
+            <button class="btn btn-s" onclick="addProduct()">زیادکردن</button>
+        </div>
+
+        <div class="card">
+            <h4>📥 داواکارییە گەیشتووەکان</h4>
+            <div id="admin-orders"></div>
+        </div>
+    </div>
+</div>
+
+<div id="pay-modal">
+    <div class="card" style="width:100%; max-width:400px; text-align:center;">
+        <h3 style="color:var(--fastpay);">پارەدان بە FastPay</h3>
+        <p>بڕی <b id="modalPrice"></b> بنێرە بۆ: <br><b style="font-size:1.5rem;">07510074008</b></p>
+        <input type="text" id="orderDetails" placeholder="ناوی یاری + ئایدی">
+        <p style="font-size:12px; color:gray;">لینکێکی وەسڵ (وێنە) لێرە دابنێ:</p>
+        <input type="text" id="receiptLink" placeholder="لینکی وێنەی وەسڵ">
+        <button class="btn btn-s" onclick="confirmOrder()">ناردنی کۆتایی</button>
+        <button onclick="closeModal()" style="margin-top:10px; background:none; border:none; color:gray; cursor:pointer;">پاشگەزبوونەوە</button>
     </div>
 </div>
 
@@ -66,52 +85,94 @@
     const TG_CHAT_ID = "6259019006";
 
     let myPhone = "";
+    let selectedItem = null;
 
     function startApp() {
         myPhone = document.getElementById('userPhone').value;
-        if(myPhone.length < 10) return alert("تکایە ژمارەیەکی ڕاست بنووسە");
-
+        if(myPhone.length < 10) return alert("ژمارە هەڵەیە");
         document.getElementById('auth-ui').style.display = 'none';
-
         if(myPhone === '07510074008') {
             document.getElementById('admin-ui').style.display = 'block';
             fetchAdminOrders();
-            setInterval(fetchAdminOrders, 5000); // نوێبوونەوەی خۆکار بۆ ئادمین
         } else {
             document.getElementById('store-ui').style.display = 'block';
             document.getElementById('displayPhone').innerText = myPhone;
-            fetchUserOrders();
-            setInterval(fetchUserOrders, 5000); // نوێبوونەوەی خۆکار بۆ کڕیار
+            fetchProducts();
+            fetchUserHistory();
         }
     }
 
-    async function sendOrder(item) {
-        const order = {
-            phone: myPhone,
-            item: item,
-            status: 'pending',
-            time: new Date().toLocaleTimeString('ku-IQ')
-        };
-        await fetch(`${FB_URL}/orders.json`, { method: 'POST', body: JSON.stringify(order) });
-        
-        // ناردنی نامە بۆ تێلێگرامەکەت
-        fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent("🛒 داواکاری نوێ!\n📦 کاڵا: "+item+"\n📞 ژمارە: "+myPhone)}`);
-        
-        alert("داواکارییەکەت نێردرا ✅");
-        fetchUserOrders();
+    // --- Product Logic ---
+    async function addProduct() {
+        const n = document.getElementById('prodName').value;
+        const p = document.getElementById('prodPrice').value;
+        if(!n || !p) return;
+        await fetch(`${FB_URL}/products.json`, { method: 'POST', body: JSON.stringify({name: n, price: p}) });
+        alert("کاڵا زیادکرا");
+        location.reload();
     }
 
-    async function fetchUserOrders() {
+    async function fetchProducts() {
+        const res = await fetch(`${FB_URL}/products.json`);
+        const data = await res.json();
+        let html = "";
+        for(let id in data) {
+            html += `<div class="item-row">
+                <span><b>${data[id].name}</b> - ${data[id].price} د.ک</span>
+                <button class="btn btn-s" style="width:auto; padding:5px 15px;" onclick="openPay('${data[id].name}', '${data[id].price}')">کڕین</button>
+            </div>`;
+        }
+        document.getElementById('product-list').innerHTML = html || "هیچ کاڵایەک نییە";
+    }
+
+    // --- Order Logic ---
+    function openPay(name, price) {
+        selectedItem = {name, price};
+        document.getElementById('modalPrice').innerText = price + " د.ک";
+        document.getElementById('pay-modal').style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('pay-modal').style.display = 'none'; }
+
+    async function confirmOrder() {
+        const details = document.getElementById('orderDetails').value;
+        const receipt = document.getElementById('receiptLink').value;
+        if(!details) return alert("وردەکاری بنووسە");
+
+        const order = {
+            phone: myPhone,
+            item: selectedItem.name,
+            price: selectedItem.price,
+            details: details,
+            receipt: receipt || "نییە",
+            status: 'pending',
+            time: new Date().toLocaleString('ku-IQ')
+        };
+
+        await fetch(`${FB_URL}/orders.json`, { method: 'POST', body: JSON.stringify(order) });
+
+        // Telegram Notification
+        const msg = `🛒 داواکاری نوێ!\n📞 کڕیار: ${order.phone}\n📦 کاڵا: ${order.item}\n📝 وردەکاری: ${order.details}\n🖼 وەسڵ: ${order.receipt}`;
+        fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(msg)}`);
+
+        alert("داواکارییەکەت نێردرا بۆ ئادمین");
+        closeModal();
+        fetchUserHistory();
+    }
+
+    async function fetchUserHistory() {
         const res = await fetch(`${FB_URL}/orders.json`);
         const data = await res.json();
         let html = "";
         for(let id in data) {
             if(data[id].phone === myPhone) {
-                let stTxt = data[id].status === 'pending' ? '⏳ چاوەڕوان' : (data[id].status === 'completed' ? '✅ وەرگیرا' : '❌ ڕەتکراوە');
-                html += `<div class="product"><span>${data[id].item}</span><span class="status ${data[id].status}">${stTxt}</span></div>`;
+                html += `<div class="item-row">
+                    <div><b>${data[id].item}</b><br><small>${data[id].time}</small></div>
+                    <span class="status ${data[id].status}">${data[id].status}</span>
+                </div>`;
             }
         }
-        document.getElementById('user-orders').innerHTML = html || "هیچ داواکارییەکت نییە";
+        document.getElementById('user-history').innerHTML = html || "مێژوویەک نییە";
     }
 
     async function fetchAdminOrders() {
@@ -121,18 +182,18 @@
         for(let id in data) {
             if(data[id].status === 'pending') {
                 html += `<div class="card" style="border-right:5px solid var(--p);">
-                    <b>📞 کڕیار: ${data[id].phone}</b><br>📦 کاڵا: ${data[id].item}<br><small>${data[id].time}</small><hr>
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn btn-s" onclick="updateStatus('${id}', 'completed')">وەرگرتن</button>
-                        <button class="btn btn-reject" onclick="updateStatus('${id}', 'rejected')">ڕەتکردنەوە</button>
-                    </div>
+                    <b>📞 کڕیار: ${data[id].phone}</b><br>
+                    📦 کاڵا: ${data[id].item}<br>📝 ${data[id].details}<br>
+                    🖼 وەسڵ: <a href="${data[id].receipt}" target="_blank">بینینی وێنە</a><hr>
+                    <button class="btn btn-s" style="margin-bottom:5px;" onclick="updateOrder('${id}','completed')">وەرگرتن (تەواو)</button>
+                    <button class="btn btn-r" onclick="updateOrder('${id}','rejected')">ڕەتکردنەوە</button>
                 </div>`;
             }
         }
-        document.getElementById('admin-list').innerHTML = html || "<p style='text-align:center;'>داواکاری نوێ نییە</p>";
+        document.getElementById('admin-orders').innerHTML = html || "داواکاری نوێ نییە";
     }
 
-    async function updateStatus(id, s) {
+    async function updateOrder(id, s) {
         await fetch(`${FB_URL}/orders/${id}.json`, { method: 'PATCH', body: JSON.stringify({status: s}) });
         fetchAdminOrders();
     }
