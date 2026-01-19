@@ -3,37 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>کۆگای زانا - وەسڵ و پارەدان</title>
+    <title>کۆگای زانا ئادەم - سیستەمی وەسڵ</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --primary: #3182ce; --fastpay: #e31e24; --success: #25D366; --bg: #f7fafc; }
-        body { font-family: sans-serif; background: var(--bg); padding: 10px; text-align: center; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        body { font-family: sans-serif; background: var(--bg); padding: 10px; text-align: center; color: #2d3748; }
+        .container { max-width: 550px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .input-group { margin-bottom: 20px; text-align: right; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; color: #4a5568; }
         input, select { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; margin-bottom: 10px; box-sizing: border-box; }
-        .btn-add { background: var(--primary); color: white; border: none; padding: 14px; width: 100%; border-radius: 10px; cursor: pointer; font-weight: bold; }
-        #receipt-area { padding: 15px; border: 2px solid #edf2f7; border-radius: 12px; background: #fff; margin-top: 20px; }
-        .total-box { font-size: 24px; font-weight: bold; color: var(--fastpay); margin-top: 15px; padding: 10px; background: #fff5f5; border-radius: 10px; }
-        .payment-box { display: none; margin-top: 20px; border-top: 2px solid #eee; padding-top: 20px; }
-        .qr-img { width: 100%; max-width: 250px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #ddd; }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 14px; width: 100%; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        #receipt-area { padding: 20px; border: 2px solid #edf2f7; border-radius: 12px; background: #fff; margin-top: 20px; }
+        .item-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+        .total-box { font-size: 26px; font-weight: bold; color: var(--fastpay); margin-top: 15px; padding: 10px; background: #fff5f5; border-radius: 10px; }
+        .payment-box { display: none; margin-top: 25px; border-top: 2px solid #eee; padding-top: 20px; }
+        .qr-img { width: 100%; max-width: 250px; border-radius: 15px; border: 4px solid #f7fafc; margin-bottom: 15px; }
+        .screenshot-area { background: #f8fafc; padding: 15px; border-radius: 10px; border: 2px dashed #cbd5e0; margin-top: 10px; }
+        .btn-wa { background: var(--success); color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="color: var(--primary);">کۆگای زانا ئادەم</h2>
+    <h2 style="color: var(--primary); margin-bottom:0;">کۆگای زانا ئادەم</h2>
+    <p style="font-size:14px; color:#666; margin-bottom:20px;">وەسڵی فرۆشتنی شاشە و پارچە</p>
 
     <div class="input-group">
-        <input type="text" id="custName" placeholder="ناوی کڕیار بنووسە...">
+        <label>ناوی کڕیار:</label>
+        <input type="text" id="custName" placeholder="ناوی کڕیار لێرە بنووسە...">
+        
+        <label>مۆدێلی شاشە هەڵبژێرە:</label>
         <select id="itemSelect">
-            <option value="">-- هەڵبژاردنی شاشە / پارچە --</option>
-        </select>
+            <option value="">-- مۆدێلەکە هەڵبژێرە --</option>
+            </select>
         <button class="btn-add" onclick="addItem()">+ زیادکردن بۆ وەسڵ</button>
     </div>
 
     <div id="receipt-area">
-        <h3>وەسڵی کڕین</h3>
-        <p id="display-info">کڕیار: ---</p>
+        <h3 style="margin:0;">وەسڵی کڕین</h3>
+        <p id="display-info" style="font-size:13px; color:#555;">کڕیار: ---</p>
+        <hr>
         <div id="cart-list"></div>
         <div class="total-box">کۆی گشتی: <span id="total-amount">0</span> دینار</div>
     </div>
@@ -41,30 +50,39 @@
     <button id="pay-btn" class="btn-add" style="background:var(--fastpay); margin-top:15px;" onclick="showPayment()">💳 پارەدان بە فاستپەی</button>
 
     <div id="payment-box" class="payment-box">
-        <h4 style="color:var(--fastpay);">بارکۆدی فاستپەی زانا ئادەم</h4>
-        <img id="qr-image" src="IMG_20260119_035608.png" class="qr-img">
-        <p style="font-size:13px;">وێنەی (Screenshot) پارە ناردنەکە دابنێ:</p>
-        <input type="file" id="screenshot" accept="image/*">
-        <button class="btn-add" style="background:var(--success);" onclick="sendWhatsApp()">✅ ناردنی وەسڵ بۆ واتسئاپ</button>
+        <h3 style="color:var(--fastpay); margin-bottom:10px;">FastPay QR - Zana Adam</h3>
+        <img src="1768783291653.png" class="qr-img" alt="FastPay QR">
+        
+        <div class="screenshot-area">
+            <p style="margin:0; font-size:14px; font-weight:bold;">سکرین‌شۆتی ناردنی پارەکە ئاپلۆد بکە:</p>
+            <input type="file" id="screenshot" accept="image/*">
+        </div>
+        
+        <button class="btn-wa" onclick="sendWhatsApp()">✅ ناردنی وەسڵ و سکرین بۆ واتسئاپ</button>
     </div>
 </div>
 
 <script>
-    // لیستی نرخەکان لە وێنەکەوە
+    // هەموو مۆدێل و نرخەکان بەپێی وێنەکەت
     const products = {
-        "Redmi A1+/A2/A2 original": 11000,
-        "Redmi A3/A3 PLUS ORG NEW": 12000,
-        "Redmi Note 13 4G OLED": 35000,
-        "POCO X4 GT ORG NEW": 15000,
-        "POCO X6 OLED": 36000,
-        "MI 11 LITE OLED": 55000
+        "Redmi A1+/A2/A2 original": 11000, "Redmi A3/A3 PLUS ORG": 12000, "Redmi A5 ORG NEW": 12000,
+        "Redmi 7 ORG NEW": 11000, "Redmi 8/8A ORG NEW": 11000, "Redmi 9/9 PRIME ORG": 11000,
+        "Redmi 9A/9C/10A ORG": 11000, "Redmi 10 4G ORG NEW": 13000, "Redmi 10C ORG NEW": 12000,
+        "Redmi 12 4G ORG NEW": 12000, "Redmi 13 4G ORG NEW": 12000, "Redmi Note 7/8 ORG": 11000,
+        "Redmi Note 9 ORG NEW": 11000, "Redmi Note 10 4G/11S ORG": 12000, "Redmi Note 12 4G ORG": 12000,
+        "Redmi Note 13 4G ORG": 13000, "Redmi Note 13 4G OLED": 35000, "Redmi Note 13 Pro 5G OLED": 36000,
+        "Redmi Note 13 Pro 5G INCELL": 14000, "Redmi Note 13 PRO PLUS ORG": 55000,
+        "POCO X3/X3 PRO ORG": 14000, "POCO X4 GT ORG": 15000, "POCO X4 PRO 5G OLED": 33000,
+        "POCO X6 OLED": 36000, "POCO X7 PRO ORG": 62000, "POCO F5 5G OLED": 37000,
+        "POCO M6 PRO 4G OLED": 35000, "MI 11 LITE OLED": 55000, "MI 12T/12T PRO ORG": 45000,
+        "MI 10T ORG NEW": 17000, "Herman White Oats": 10000
     };
 
     const select = document.getElementById('itemSelect');
     for (let name in products) {
         let opt = document.createElement('option');
         opt.value = name;
-        opt.innerHTML = name + " (" + products[name].toLocaleString() + " دینار)";
+        opt.innerHTML = name + " - " + products[name].toLocaleString() + " د.ک";
         select.appendChild(opt);
     }
 
@@ -73,7 +91,7 @@
     function addItem() {
         const itemName = select.value;
         const custName = document.getElementById('custName').value;
-        if(!custName || !itemName) return alert("ناوەکە و کاڵاکە پڕ بکەرەوە");
+        if(!custName || !itemName) return alert("تکایە ناو و مۆدێل پڕ بکەرەوە");
         cart.push({name: itemName, price: products[itemName]});
         document.getElementById('display-info').innerText = "کڕیار: " + custName;
         updateUI();
@@ -85,7 +103,7 @@
         let total = 0;
         cart.forEach(item => {
             total += item.price;
-            list.innerHTML += `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #eee;"><span>${item.name}</span><span>${item.price.toLocaleString()} دینار</span></div>`;
+            list.innerHTML += `<div class="item-row"><span>${item.name}</span><span>${item.price.toLocaleString()} د.ک</span></div>`;
         });
         document.getElementById('total-amount').innerText = total.toLocaleString();
     }
@@ -98,8 +116,8 @@
     function sendWhatsApp() {
         const element = document.getElementById('receipt-area');
         html2pdf().from(element).save('Zana-Shop.pdf');
-        const myNumber = "9647758887488"; // ژمارەی خۆت
-        let msg = `*وەسڵی نوێ لە کۆگای زانا ئادەم*%0Aکۆی گشتی: ${document.getElementById('total-amount').innerText} دینار`;
+        const myNumber = "9647758887488"; // ژمارەی خۆت لێرە بنووسە
+        let msg = `*وەسڵی نوێ - کۆگای زانا*%0Aکڕیار: ${document.getElementById('custName').value}%0Aکۆی گشتی: ${document.getElementById('total-amount').innerText} دینار.`;
         window.open(`https://wa.me/${myNumber}?text=${msg}`, '_blank');
     }
 </script>
