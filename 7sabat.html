@@ -3,97 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AHMAD PHONE - لیستی نرخەکان</title>
+    <title>AHMAD PHONE - نرخی کاڵاکان</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .header { text-align: center; margin-bottom: 25px; color: #1a1a1a; }
-        .container { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid #007bff; }
-        h1 { margin: 0; font-size: 28px; color: #007bff; }
-        input { width: 100%; padding: 15px; margin: 15px 0; border: 2px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 18px; text-align: center; transition: 0.3s; }
-        input:focus { border-color: #007bff; outline: none; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        
+        /* ستایلی لۆگۆ */
+        .logo-container {
+            background: #007bff;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 15px rgba(0,123,255,0.3);
+            border: 4px solid white;
+        }
+
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { margin: 5px 0; color: #1a1a1a; font-size: 28px; letter-spacing: 1px; }
+        .header p { color: #666; margin: 0; font-size: 14px; }
+
+        .container { width: 100%; max-width: 400px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; }
+        
+        input { width: 100%; padding: 15px; margin: 15px 0; border: 2px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 18px; text-align: center; outline: none; transition: 0.3s; }
+        input:focus { border-color: #007bff; background: #fcfdfe; }
+
         button { width: 100%; padding: 15px; background-color: #007bff; color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 17px; font-weight: bold; margin-bottom: 10px; transition: 0.3s; }
-        button:hover { background-color: #0056b3; }
-        .scan-btn { background-color: #28a745; }
+        button:active { transform: scale(0.98); }
+        
+        .scan-btn { background-color: #28a745; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .scan-btn:hover { background-color: #218838; }
-        #reader { width: 100%; margin-top: 15px; border-radius: 12px; overflow: hidden; border: 1px solid #ddd; }
-        .result-card { margin-top: 25px; padding: 20px; border-radius: 15px; display: none; text-align: center; background: #f8f9fa; border: 1px solid #e1e4e8; animation: fadeIn 0.5s; }
-        .price { font-size: 26px; color: #d9534f; font-weight: bold; margin-top: 10px; display: block; }
-        .model-name { font-size: 20px; color: #333; font-weight: 600; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        #reader { width: 100%; margin-top: 15px; border-radius: 15px; overflow: hidden; border: 1px solid #ddd; display: none; }
+
+        .result-card { margin-top: 25px; padding: 20px; border-radius: 15px; display: none; text-align: center; background: #f0f7ff; border: 2px solid #007bff; animation: slideUp 0.4s ease; }
+        .model-name { font-size: 20px; color: #222; font-weight: bold; margin-bottom: 8px; }
+        .price { font-size: 28px; color: #d9534f; font-weight: 800; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
+    <div class="logo-container">
+        AP
+    </div>
+
     <div class="header">
         <h1>AHMAD PHONE</h1>
-        <p>بۆ زانینی نرخ بارکۆد بنووسە یان سکان بکە</p>
+        <p>سیستەمی سکانکردن و زانینی نرخ</p>
     </div>
 
     <div class="container">
-        <input type="text" id="barcodeInput" placeholder="بارکۆد لێرە بنووسە...">
-        <button onclick="checkPrice(document.getElementById('barcodeInput').value)">گەڕان بۆ نرخ</button>
-        <button class="scan-btn" onclick="startScanner()">کردنەوەی کامێرا (Scan)</button>
+        <input type="text" id="barcodeInput" placeholder="ژمارەی بارکۆد لێرە بنووسە">
+        
+        <button onclick="checkPrice(document.getElementById('barcodeInput').value)">بگەڕێ بۆ نرخ</button>
+        
+        <button class="scan-btn" onclick="startScanner()">
+            📷 کردنەوەی کامێرا (Scan)
+        </button>
         
         <div id="reader"></div>
 
         <div id="result" class="result-card">
-            <div class="model-name" id="itemName">ناوی مۆدێل</div>
-            <span class="price" id="itemPrice">0 IQD</span>
+            <div class="model-name" id="itemName">ناوی کاڵا</div>
+            <div class="price" id="itemPrice">0 IQD</div>
         </div>
     </div>
 
     <script>
         const products = {
-            "6926081469953": { name: "LK150S TYPE_C / MICRO", price: "3,000 IQD" },
+            "6926081469953": { name: "LK150S (TYPE_C / MICRO)", price: "3,000 IQD" },
             "6975011272217": { name: "GERLAX L36T TYPE_C", price: "6,000 IQD" },
-            "6975011272514": { name: "GERLAX GD-43 ALL", price: "6,000 IQD" },
-            "6975011278769": { name: "GERLAX D7L IPHONE", price: "5,000 IQD" },
-            "6975011272859": { name: "GERLAX GD-52L IPHONE", price: "5,000 IQD" },
-            "6975011276406": { name: "GERLAX L16 TYPE_C", price: "5,000 IQD" },
-            "6975011278721": { name: "GERLAX D7T USB-TYPE_C", price: "3,000 IQD" },
-            "6972573337538": { name: "WLIW X213 USB-TYPE_C", price: "5,000 IQD" },
-            "6972573335077": { name: "WLIW T66 USB-MICRO", price: "5,000 IQD" },
-            "6976504663871": { name: "FLATWIRE USB-IPHONE", price: "5,000 IQD" },
-            "6941950218456": { name: "MX-CB307 TYPE-C-IPHONE", price: "7,000 IQD" },
-            "6954176814968": { name: "AORAX 106 USB-TYPE C - ADAPTER", price: "12,000 IQD" },
-            "6978652148781": { name: "AORAX 886Plus TYPEC-TYPEC", price: "12,000 IQD" },
-            "6977465962140": { name: "AORAX JS-02 PD+QC", price: "8,000 IQD" },
-            "195949121319": { name: "USB-C 20W ADAPTER", price: "13,000 IQD" },
-            "190198001733": { name: "EarPods Lightning", price: "13,000 IQD" },
-            "190198496263": { name: "USB-C to Lightining", price: "5,000 IQD" },
-            "194252156926": { name: "IPHONE 14 PRO MAX USB-C 25W ADAPTER", price: "25,000 IQD" }
-        };
-
-        function checkPrice(barcode) {
-            const resultDiv = document.getElementById('result');
-            const itemName = document.getElementById('itemName');
-            const itemPrice = document.getElementById('itemPrice');
-            const cleanBarcode = barcode.trim();
-
-            if (products[cleanBarcode]) {
-                itemName.innerText = products[cleanBarcode].name;
-                itemPrice.innerText = products[cleanBarcode].price;
-                resultDiv.style.display = "block";
-            } else {
-                alert("ئەم بارکۆدە نەدۆزرایەوە!");
-                resultDiv.style.display = "none";
-            }
-        }
-
-        let html5QrCode;
-        function startScanner() {
-            html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                { fps: 15, qrbox: { width: 280, height: 180 } },
-                (decodedText) => {
-                    document.getElementById('barcodeInput').value = decodedText;
-                    checkPrice(decodedText);
-                    html5QrCode.stop();
-                }
-            ).catch(err => alert("هەڵە لە کامێرا: " + err));
-        }
-    </script>
-</body>
-</html>
+            "6975011272514": { name: "GERLAX GD
