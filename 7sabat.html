@@ -3,30 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AHMAD PHONE - POS System</title>
+    <title>AHMAD PHONE - POS</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); box-sizing: border-box; }
+        .header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         h1 { color: #007bff; margin: 0; font-size: 24px; }
         
         input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 10px; box-sizing: border-box; text-align: center; font-size: 16px; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 10px; font-size: 16px; transition: 0.2s; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; font-size: 16px; transition: 0.2s; }
         
         .add-btn { background-color: #007bff; color: white; }
         .scan-btn { background-color: #28a745; color: white; }
         
-        #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; margin-bottom: 10px; }
+        #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; margin-bottom: 10px; border: 1px solid #ddd; }
 
-        /* بەشی سەبەتەی کڕین */
-        .cart-section { margin-top: 20px; border-top: 2px dashed #ccc; padding-top: 15px; }
-        .cart-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 14px; }
+        .cart-section { margin-top: 20px; border-top: 2px dashed #ccc; padding-top: 10px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
+        .remove-item { color: #d9534f; cursor: pointer; font-weight: bold; padding: 0 10px; }
+        
         .total-box { margin-top: 15px; padding: 15px; background: #eef6ff; border-radius: 10px; text-align: center; }
-        .total-price { font-size: 22px; color: #d9534f; font-weight: bold; }
+        .total-price { font-size: 24px; color: #d9534f; font-weight: bold; }
 
         .whatsapp-btn { background-color: #25D366; color: white; margin-top: 15px; display: none; }
-        .clear-btn { background-color: #6c757d; color: white; font-size: 12px; padding: 5px; width: auto; }
+        .clear-btn { background-color: #6c757d; color: white; font-size: 12px; padding: 5px 15px; width: auto; }
     </style>
 </head>
 <body>
@@ -34,18 +35,18 @@
     <div class="container">
         <div class="header">
             <h1>AHMAD PHONE</h1>
-            <p>سیستەمی حسابات و فرۆشتن</p>
+            <p>سیستەمی سکان و حساباتی فرۆشتن</p>
         </div>
 
         <input type="text" id="barcodeInput" placeholder="بارکۆد بنووسە یان سکان بکە">
-        <button class="add-btn" onclick="addToCart(document.getElementById('barcodeInput').value)">➕ زیادکردن بۆ لیست</button>
-        <button class="scan-btn" onclick="startScanner()">📷 سکانکردنی کاڵا</button>
+        <button class="add-btn" onclick="addToCart(document.getElementById('barcodeInput').value)">➕ زیادکردنی کاڵا</button>
+        <button class="scan-btn" onclick="startScanner()">📷 سکانکردن (Scan)</button>
         
         <div id="reader"></div>
 
-        <div class="cart-section" id="cartSection">
+        <div class="cart-section">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3>لیستی کڕین (سەبەتە)</h3>
+                <h3>لیستی فرۆشتن</h3>
                 <button class="clear-btn" onclick="clearCart()">سڕینەوەی هەمووی</button>
             </div>
             <div id="cartItems"></div>
@@ -55,12 +56,12 @@
                 <div class="total-price" id="totalPrice">0 IQD</div>
             </div>
 
-            <button class="whatsapp-btn" id="waBtn" onclick="sendToWhatsapp()">✅ ناردنی حسابات بۆ واتسئاپ</button>
+            <button class="whatsapp-btn" id="waBtn" onclick="sendToWhatsapp()">✅ ناردنی وەصڵ بۆ واتسئاپ</button>
         </div>
     </div>
 
     <script>
-        let cart = [];
+        let cart = {}; // لێرە کاڵاکان بەپێی بارکۆد پاشەکەوت دەبن بۆ حسابکردنی بڕ
         const products = {
             "6926081469953": { name: "LK150S (TYPE_C/MICRO)", price: 3000 },
             "6975011272217": { name: "GERLAX L36T TYPE_C", price: 6000 },
@@ -105,12 +106,21 @@
         function addToCart(barcode) {
             const b = barcode.trim();
             if (products[b]) {
-                cart.push(products[b]);
+                if (cart[b]) {
+                    cart[b].qty += 1;
+                } else {
+                    cart[b] = { ...products[b], qty: 1 };
+                }
                 updateCartUI();
                 document.getElementById('barcodeInput').value = "";
             } else {
-                alert("بارکۆد نەدۆزرایەوە!");
+                alert("ئەم بارکۆدە نەدۆزرایەوە!");
             }
+        }
+
+        function removeFromCart(barcode) {
+            delete cart[barcode];
+            updateCartUI();
         }
 
         function updateCartUI() {
@@ -118,20 +128,22 @@
             list.innerHTML = "";
             let total = 0;
             
-            cart.forEach((item, index) => {
-                total += item.price;
+            Object.keys(cart).forEach(barcode => {
+                const item = cart[barcode];
+                const itemTotal = item.price * item.qty;
+                total += itemTotal;
                 list.innerHTML += `<div class="cart-item">
-                    <span>${index + 1}. ${item.name}</span>
-                    <span>${item.price.toLocaleString()} IQD</span>
+                    <span><b>(${item.qty} دانە)</b> ${item.name}</span>
+                    <span>${itemTotal.toLocaleString()} IQD <span class="remove-item" onclick="removeFromCart('${barcode}')">X</span></span>
                 </div>`;
             });
 
             document.getElementById('totalPrice').innerText = total.toLocaleString() + " IQD";
-            document.getElementById('waBtn').style.display = cart.length > 0 ? "block" : "none";
+            document.getElementById('waBtn').style.display = Object.keys(cart).length > 0 ? "block" : "none";
         }
 
         function clearCart() {
-            cart = [];
+            cart = {};
             updateCartUI();
         }
 
@@ -140,9 +152,11 @@
             let total = 0;
             let itemsText = "";
             
-            cart.forEach((item, index) => {
-                total += item.price;
-                itemsText += `${index + 1}- ${item.name} (${item.price.toLocaleString()} IQD)%0A`;
+            Object.keys(cart).forEach((barcode, index) => {
+                const item = cart[barcode];
+                const itemTotal = item.price * item.qty;
+                total += itemTotal;
+                itemsText += `${index + 1}- ${item.name}%0A    بڕ: ${item.qty} دانە%0A    نرخ: ${itemTotal.toLocaleString()} IQD%0A`;
             });
 
             const message = `📋 *وەصڵی فرۆشتن - AHMAD PHONE*%0A--------------------------%0A${itemsText}--------------------------%0A💰 *کۆیی گشتی:* ${total.toLocaleString()} IQD%0A⏰ *کات:* ${new Date().toLocaleString('ku-IQ')}`;
