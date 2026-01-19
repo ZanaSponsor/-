@@ -3,43 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zana Sponsor</title>
-    
-    <script>
-    !function (w, d, t) {
-      w.Tawk_WindowCode = t;
-      var sw = d.createElement('script');
-      sw.type = 'text/javascript'; sw.async = !0;
-      sw.src = 'https://analytics.tiktok.com/i18n/pixel/sdk.js?sdkid=' + t;
-      var s = d.getElementsByTagName('script')[0];
-      s.parentNode.insertBefore(sw, s);
-    }(window, document, '7597026457533104144');
-    ttq.track('PageView');
-    </script>
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+    <title>AHMAD PHONE - لیستی نرخەکان</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; background-color: #fff; margin: 0; }
-        .profile-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; }
-        .link-card { width: 100%; max-width: 350px; padding: 15px; margin-bottom: 12px; border-radius: 50px; text-decoration: none; color: white; text-align: center; font-weight: bold; font-size: 18px; }
-        .whatsapp { background: #25D366; }
-        .viber { background: #7360f2; }
-        .phone { background: #007bff; }
-        .footer-link { margin-top: 40px; color: #42e36d; text-decoration: none; border: 1px solid #42e36d; padding: 8px 30px; border-radius: 20px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .header { text-align: center; margin-bottom: 25px; color: #1a1a1a; }
+        .container { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid #007bff; }
+        h1 { margin: 0; font-size: 28px; color: #007bff; }
+        input { width: 100%; padding: 15px; margin: 15px 0; border: 2px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 18px; text-align: center; transition: 0.3s; }
+        input:focus { border-color: #007bff; outline: none; }
+        button { width: 100%; padding: 15px; background-color: #007bff; color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 17px; font-weight: bold; margin-bottom: 10px; transition: 0.3s; }
+        button:hover { background-color: #0056b3; }
+        .scan-btn { background-color: #28a745; }
+        .scan-btn:hover { background-color: #218838; }
+        #reader { width: 100%; margin-top: 15px; border-radius: 12px; overflow: hidden; border: 1px solid #ddd; }
+        .result-card { margin-top: 25px; padding: 20px; border-radius: 15px; display: none; text-align: center; background: #f8f9fa; border: 1px solid #e1e4e8; animation: fadeIn 0.5s; }
+        .price { font-size: 26px; color: #d9534f; font-weight: bold; margin-top: 10px; display: block; }
+        .model-name { font-size: 20px; color: #333; font-weight: 600; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <img src="https://i.ibb.co/VYJZyyj7/1000045264.jpg" class="profile-img">
-    <h1>Zana Sponsor</h1>
-    <p>بۆ پەیوەندی کردن، کلیک بکە</p>
+    <div class="header">
+        <h1>AHMAD PHONE</h1>
+        <p>بۆ زانینی نرخ بارکۆد بنووسە یان سکان بکە</p>
+    </div>
 
-    <a href="https://wa.me/+9647758887488" class="link-card whatsapp">واتساپ</a>
-    <a href="viber://chat?number=+9647758887488" class="link-card viber">ڤایبەر</a>
-    <a href="tel:+9647758887488" class="link-card phone">تەلەفۆن</a>
+    <div class="container">
+        <input type="text" id="barcodeInput" placeholder="بارکۆد لێرە بنووسە...">
+        <button onclick="checkPrice(document.getElementById('barcodeInput').value)">گەڕان بۆ نرخ</button>
+        <button class="scan-btn" onclick="startScanner()">کردنەوەی کامێرا (Scan)</button>
+        
+        <div id="reader"></div>
 
-    <a href="https://zana-sponsor.vercel.app" class="footer-link">Zana Sponsor</a>
+        <div id="result" class="result-card">
+            <div class="model-name" id="itemName">ناوی مۆدێل</div>
+            <span class="price" id="itemPrice">0 IQD</span>
+        </div>
+    </div>
 
+    <script>
+        const products = {
+            "6926081469953": { name: "LK150S TYPE_C / MICRO", price: "3,000 IQD" },
+            "6975011272217": { name: "GERLAX L36T TYPE_C", price: "6,000 IQD" },
+            "6975011272514": { name: "GERLAX GD-43 ALL", price: "6,000 IQD" },
+            "6975011278769": { name: "GERLAX D7L IPHONE", price: "5,000 IQD" },
+            "6975011272859": { name: "GERLAX GD-52L IPHONE", price: "5,000 IQD" },
+            "6975011276406": { name: "GERLAX L16 TYPE_C", price: "5,000 IQD" },
+            "6975011278721": { name: "GERLAX D7T USB-TYPE_C", price: "3,000 IQD" },
+            "6972573337538": { name: "WLIW X213 USB-TYPE_C", price: "5,000 IQD" },
+            "6972573335077": { name: "WLIW T66 USB-MICRO", price: "5,000 IQD" },
+            "6976504663871": { name: "FLATWIRE USB-IPHONE", price: "5,000 IQD" },
+            "6941950218456": { name: "MX-CB307 TYPE-C-IPHONE", price: "7,000 IQD" },
+            "6954176814968": { name: "AORAX 106 USB-TYPE C - ADAPTER", price: "12,000 IQD" },
+            "6978652148781": { name: "AORAX 886Plus TYPEC-TYPEC", price: "12,000 IQD" },
+            "6977465962140": { name: "AORAX JS-02 PD+QC", price: "8,000 IQD" },
+            "195949121319": { name: "USB-C 20W ADAPTER", price: "13,000 IQD" },
+            "190198001733": { name: "EarPods Lightning", price: "13,000 IQD" },
+            "190198496263": { name: "USB-C to Lightining", price: "5,000 IQD" },
+            "194252156926": { name: "IPHONE 14 PRO MAX USB-C 25W ADAPTER", price: "25,000 IQD" }
+        };
+
+        function checkPrice(barcode) {
+            const resultDiv = document.getElementById('result');
+            const itemName = document.getElementById('itemName');
+            const itemPrice = document.getElementById('itemPrice');
+            const cleanBarcode = barcode.trim();
+
+            if (products[cleanBarcode]) {
+                itemName.innerText = products[cleanBarcode].name;
+                itemPrice.innerText = products[cleanBarcode].price;
+                resultDiv.style.display = "block";
+            } else {
+                alert("ئەم بارکۆدە نەدۆزرایەوە!");
+                resultDiv.style.display = "none";
+            }
+        }
+
+        let html5QrCode;
+        function startScanner() {
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                { fps: 15, qrbox: { width: 280, height: 180 } },
+                (decodedText) => {
+                    document.getElementById('barcodeInput').value = decodedText;
+                    checkPrice(decodedText);
+                    html5QrCode.stop();
+                }
+            ).catch(err => alert("هەڵە لە کامێرا: " + err));
+        }
+    </script>
 </body>
 </html>
