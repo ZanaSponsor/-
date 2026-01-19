@@ -24,4 +24,103 @@
         .fastpay-card { display: none; margin-top: 20px; padding: 15px; border: 2px solid var(--fastpay); border-radius: 15px; background: #fff; animation: slideUp 0.5s; }
         .qr-img { width: 220px; height: auto; border-radius: 10px; margin: 10px 0; }
         
-        .btn-pay { background: var(--fastpay); color: white; border: none; padding: 15px; width: 1
+        .btn-pay { background: var(--fastpay); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; }
+        .btn-wa { background: var(--success); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="color: var(--primary);">کۆگای زانا ئادەم</h2>
+    
+    <div class="search-box">
+        <input type="text" id="partCode" placeholder="کۆدی شاشە، پاتری یان کاڵا..." onkeypress="if(event.key==='Enter') addItem()">
+        <button class="btn-add" onclick="addItem()">+ زیادکردن</button>
+    </div>
+
+    <div id="receipt-area">
+        <h3 style="margin:0;">پسووڵەی کڕین</h3>
+        <p style="font-size:12px; color:#666;">ڕێکەوت: <span id="current-date"></span></p>
+        <hr>
+        <div id="cart-list">
+            </div>
+        <div class="total-box">کۆی گشتی: <span id="total-amount">0</span> $</div>
+    </div>
+
+    <button class="btn-pay" onclick="showFastPay()">💳 پارەدان بە FastPay</button>
+
+    <div id="fastpay-area" class="fastpay-card">
+        <h4 style="color:var(--fastpay); margin:0;">Zana Adam - FastPay</h4>
+        <img src="fastpay_qr.png" class="qr-img" alt="FastPay QR">
+        <p style="font-size:13px; color:#555;">بڕی پارەکە سکان بکە و پاشان وەسڵەکە بنێرە</p>
+        <button class="btn-wa" onclick="sendToWhatsApp()">
+            <span>ناردنی وەسڵ بۆ واتسئاپ</span>
+        </button>
+    </div>
+</div>
+
+<script>
+    // لیستی کاڵاکانت
+    const inventory = {
+        "S13": { name: "شاشە iPhone 13 Pro", price: 165 },
+        "B12": { name: "پاتری iPhone 12 Mini", price: 35 },
+        "H": { name: "هێرمان White Oats", price: 10 } // بۆ کاڵای هێرمان
+    };
+
+    let cart = [];
+    document.getElementById('current-date').innerText = new Date().toLocaleString('ku-IQ');
+
+    function addItem() {
+        const code = document.getElementById('partCode').value.toUpperCase();
+        const item = inventory[code];
+        if (item) {
+            cart.push(item);
+            updateUI();
+            document.getElementById('partCode').value = "";
+            document.getElementById('fastpay-area').style.display = 'none';
+        } else {
+            alert("کۆدەکە هەڵەیە یان لە کۆگا نییە!");
+        }
+    }
+
+    function updateUI() {
+        const list = document.getElementById('cart-list');
+        list.innerHTML = "";
+        let total = 0;
+        cart.forEach((item, index) => {
+            total += item.price;
+            list.innerHTML += `
+                <div class="item-row">
+                    <span>${item.name}</span>
+                    <span><b>${item.price} $</b></span>
+                </div>`;
+        });
+        document.getElementById('total-amount').innerText = total;
+    }
+
+    function showFastPay() {
+        if (cart.length === 0) return alert("سەبەتەکە خاڵییە!");
+        document.getElementById('fastpay-area').style.display = 'block';
+    }
+
+    async function sendToWhatsApp() {
+        // ١. دروستکردن و داگرتنی PDF
+        const element = document.getElementById('receipt-area');
+        const opt = { margin: 1, filename: 'Zana-Receipt.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
+        html2pdf().set(opt).from(element).save();
+
+        // ٢. ناردنی وردەکاری بۆ واتسئاپی تۆ
+        const myNumber = "9647758887488"; // ژمارەی خۆت لێرە بنووسە بە فۆرماتی نێودەوڵەتی
+        let message = `*سڵاو کاک زانا، من پارەم داوە بە فاستپەی*%0A`;
+        message += `*وردەکاری کڕین:*%0A`;
+        cart.forEach(item => message += `- ${item.name}: ${item.price}$%0A`);
+        message += `%0A*کۆی گشتی: ${document.getElementById('total-amount').innerText}$*`;
+        
+        window.open(`https://wa.me/${myNumber}?text=${message}`, '_blank');
+    }
+</script>
+
+</body>
+</html>
