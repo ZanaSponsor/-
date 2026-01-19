@@ -1,30 +1,106 @@
-async function login() {
-    const p = document.getElementById('lPhone').value;
-    const ps = document.getElementById('lPass').value;
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zana Store Online</title>
+    <link href="https://fonts.cdnfonts.com/css/rabar" rel="stylesheet">
+    <style>
+        :root { --p: #1e3a8a; --s: #22c55e; --bg: #f1f5f9; --reject: #dc2626; }
+        body { font-family: 'Rabar', sans-serif; background: var(--bg); margin: 0; }
+        .container { max-width: 500px; margin: auto; padding: 15px; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-family: 'Rabar'; }
+        .btn { padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-family: 'Rabar'; width: 100%; font-weight: bold; color: white; }
+        .btn-p { background: var(--p); }
+        .btn-s { background: var(--s); }
+        .btn-reject { background: var(--reject); }
+        .product { border: 1px solid #eee; padding: 10px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .status { padding: 4px 8px; border-radius: 5px; font-size: 12px; }
+        .pending { background: #fff3cd; color: #856404; }
+        .completed { background: #d4edda; color: #155724; }
+    </style>
+</head>
+<body>
 
-    if(!p || !ps) return alert("تكایە خانەكان پڕ بكەرەوە");
+<div class="container">
+    <div id="auth-ui" class="card">
+        <h2 style="text-align:center; color:var(--p);">ZANA STORE</h2>
+        <div id="login-form">
+            <input type="text" id="phone" placeholder="ژمارەی مۆبایل">
+            <input type="password" id="pass" placeholder="پاسۆرد">
+            <button class="btn btn-p" onclick="login()">چوونە ژوورەوە</button>
+            <p onclick="showSignup(true)" style="text-align:center; cursor:pointer; font-size:14px; color:gray;">هەژمارم نییە؟ دروستی بکە</p>
+        </div>
+        <div id="signup-form" style="display:none;">
+            <input type="text" id="newName" placeholder="ناوی تەواو">
+            <input type="text" id="newPhone" placeholder="ژمارەی مۆبایل">
+            <input type="password" id="newPass" placeholder="پاسۆرد">
+            <button class="btn btn-s" onclick="signup()">تۆمارکردن</button>
+            <p onclick="showSignup(false)" style="text-align:center; cursor:pointer; font-size:14px; color:gray;">ئەژمارم هەیە؟ بچۆ ژوورەوە</p>
+        </div>
+    </div>
 
-    // ١. چوونەژوورەوەی ئادمین (ئۆفلاین کار دەکات بۆ ئەوەی هەمیشە بتوانیت بچیتە ژوورەوە)
-    if(p === '07510074008' && ps === '112233') {
-        loggedUser = { phone: p, isAdmin: true, name: 'Zana Admin' };
-        localStorage.setItem('zana_v7_user', JSON.stringify(loggedUser));
-        location.reload();
-        return;
+    <div id="store-ui" style="display:none;">
+        <div class="card">
+            <h3>بەخێرهاتی <span id="userName"></span></h3>
+            <button onclick="logout()" class="btn btn-reject" style="width:auto; padding:5px 15px;">دەرچوون</button>
+        </div>
+        <div class="card">
+            <h3>🎮 داواکردنی UC</h3>
+            <div class="product"><span>60 UC</span><button class="btn btn-s" style="width:auto;" onclick="sendOrder('60 UC')">1,500 د.ک</button></div>
+            <div class="product"><span>325 UC</span><button class="btn btn-s" style="width:auto;" onclick="sendOrder('325 UC')">7,250 د.ک</button></div>
+        </div>
+        <div class="card">
+            <h3>📜 داواکارییەکانت</h3>
+            <div id="user-orders">باردەکرێت...</div>
+        </div>
+    </div>
+
+    <div id="admin-ui" style="display:none;">
+        <div class="card"><h3>پانێڵی ئادمین</h3><button onclick="logout()" class="btn btn-reject">دەرچوون</button></div>
+        <div id="admin-list">باردەکرێت...</div>
+    </div>
+</div>
+
+<script>
+    const FB_URL = "https://zana-store-default-rtdb.firebaseio.com/";
+    const TG_TOKEN = "7959366034:AAG0nCQqcG3YsImPf53SViggiUnlWkNFh1o"; 
+    const TG_CHAT_ID = "6259019006";
+
+    let currentUser = JSON.parse(localStorage.getItem('zana_user'));
+
+    if(currentUser) { showUI(); }
+
+    function showSignup(s) {
+        document.getElementById('login-form').style.display = s ? 'none' : 'block';
+        document.getElementById('signup-form').style.display = s ? 'block' : 'none';
     }
 
-    // ٢. چوونەژوورەوەی بەكارهێنەر لە ڕێگەی فایەربەیسەوە
-    try {
-        const res = await fetch(`${FB_URL}/users/${p}.json`);
-        const user = await res.json();
+    async function signup() {
+        const n = document.getElementById('newName').value;
+        const p = document.getElementById('newPhone').value;
+        const ps = document.getElementById('newPass').value;
+        if(!n || !p || !ps) return alert("هەموو خانەکان پڕ بکەرەوە");
 
-        if(user && user.pass === ps) {
-            loggedUser = { phone: p, isAdmin: false, name: user.name };
-            localStorage.setItem('zana_v7_user', JSON.stringify(loggedUser));
-            location.reload();
+        await fetch(`${FB_URL}/users/${p}.json`, { method: 'PUT', body: JSON.stringify({name: n, pass: ps}) });
+        alert("تۆمارکرا! ئێستا بچۆ ژوورەوە");
+        showSignup(false);
+    }
+
+    async function login() {
+        const p = document.getElementById('phone').value;
+        const ps = document.getElementById('pass').value;
+
+        if(p === '07510074008' && ps === '112233') {
+            currentUser = {phone: p, name: 'Admin', isAdmin: true};
         } else {
-            alert("ئەم ژمارەیە تۆمار نەکراوە یان پاسۆرد هەڵەیە!");
+            const res = await fetch(`${FB_URL}/users/${p}.json`);
+            const user = await res.json();
+            if(user && user.pass === ps) {
+                currentUser = {phone: p, name: user.name, isAdmin: false};
+            } else {
+                return alert("هەڵەیە!");
+            }
         }
-    } catch (error) {
-        alert("کێشەی ئینتەرنێت یان داتابەیس هەیە. دڵنیابەرەوە لە Rules ی فایەربەیس.");
-    }
-}
+        localStorage.setItem('zana_user', JSON.stringify
