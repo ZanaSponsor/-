@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AHMAD PHONE - POS</title>
+    <title>AHMAD PHONE - Professional POS</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --primary: #007bff; --success: #28a745; --danger: #d9534f; --bg: #f4f7f6; }
@@ -30,7 +30,6 @@
         .search-results { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: none; }
         .search-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; text-align: right; font-size: 14px; display: flex; justify-content: space-between; }
         .search-item:hover { background: #f0f7ff; }
-        .search-item .stock-info { font-size: 11px; color: var(--danger); }
 
         button { width: 100%; padding: 14px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-bottom: 10px; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-blue { background: var(--primary); color: white; }
@@ -39,7 +38,7 @@
         .btn-outline { background: #f8f9fa; border: 2px solid #ddd; color: #555; }
 
         .cart-item { background: #f9fbff; padding: 12px; border-radius: 15px; margin-bottom: 8px; border-right: 5px solid var(--primary); }
-        .price-edit { width: 90px !important; padding: 5px !important; margin: 0 !important; color: var(--danger); font-weight: bold; text-align: center; }
+        .price-edit { width: 95px !important; padding: 5px !important; margin: 0 !important; color: var(--danger); font-weight: bold; text-align: center; }
 
         .total-container { margin-top: 15px; padding: 15px; background: #fff5f5; border-radius: 15px; text-align: center; border: 2px solid #ffdada; }
         .total-amount { font-size: 26px; font-weight: bold; color: var(--danger); }
@@ -67,34 +66,27 @@
 
         <div id="sellSection" class="section active">
             <div class="search-container">
-                <input type="text" id="barcodeSell" placeholder="لێرە بگەڕێ بەپێی ناو یان بارکۆد" oninput="advancedSearch(this.value)">
+                <input type="text" id="barcodeSell" placeholder="لێرە بگەڕێ (ناو یان بارکۆد)" oninput="advancedSearch(this.value)">
                 <div id="searchResults" class="search-results"></div>
             </div>
-            
             <button class="btn-outline" onclick="startScanner('sell')">📷 سکانکردنی بارکۆد</button>
-            
             <div id="cartItems"></div>
-            
-            <div class="total-container">
-                <div class="total-amount" id="totalPrice">0 IQD</div>
-            </div>
-            
+            <div class="total-container"><div class="total-amount" id="totalPrice">0 IQD</div></div>
             <button class="btn-green" id="btnDone" style="display:none; margin-top:10px;" onclick="finishSale()">✅ کڕین ئەنجام درا</button>
-            <button class="btn-red" id="btnDel" style="display:none;" onclick="emptyCart()">🗑️ پاککردنەوەی سەبەتە</button>
+            <button class="btn-red" id="btnDel" style="display:none;" onclick="emptyCart()">🗑️ پاککردنەوە</button>
         </div>
 
         <div id="addSection" class="section">
-            <input type="text" id="newBar" placeholder="بارکۆد بنووسە یان سکان بکە">
-            <button class="btn-outline" onclick="startScanner('add')">📷 سکانکردن</button>
+            <input type="text" id="newBar" placeholder="بارکۆد">
             <input type="text" id="newName" placeholder="ناوی کاڵا">
-            <input type="number" id="newPrice" placeholder="نرخی فرۆشتن">
-            <input type="number" id="newStock" placeholder="بڕی ناو ستۆک">
-            <button class="btn-blue" onclick="saveToDB()">💾 تۆمارکردن لە ستۆک</button>
+            <input type="number" id="newPrice" placeholder="نرخ">
+            <input type="number" id="newStock" placeholder="بڕ">
+            <button class="btn-blue" onclick="saveToDB()">💾 پاشەکەوتکردن</button>
         </div>
 
         <div id="historySection" class="section">
             <div id="historyList"></div>
-            <button class="btn-red" onclick="clearHistory()" style="margin-top:20px; background:#666;">🗑️ سڕینەوەی مێژووی فرۆشتن</button>
+            <button class="btn-red" onclick="clearHistory()" style="margin-top:20px; background:#666;">🗑️ سڕینەوەی مێژوو</button>
         </div>
 
         <div id="reader"></div>
@@ -102,30 +94,48 @@
 
     <script>
         const beep = new Audio("https://www.soundjay.com/buttons/beep-07a.mp3");
-        let db = JSON.parse(localStorage.getItem('ahmad_pos_db')) || {};
+
+        const initialData = {
+            "6926081469953": { name: "LK150S TYPE_C / MICRO", price: 3000, stock: 50 },
+            "6975011272217": { name: "GERLAX L36T TYPE_C", price: 6000, stock: 30 },
+            "6975011272514": { name: "GERLAX GD-43 ALL", price: 6000, stock: 30 },
+            "6975011278769": { name: "GERLAX D7L IPHONE", price: 5000, stock: 30 },
+            "6975011272859": { name: "GERLAX GD-52L IPHONE", price: 5000, stock: 30 },
+            "6975011276406": { name: "GERLAX L16 TYPE_C", price: 5000, stock: 30 },
+            "6975011278721": { name: "GERLAX D7T USB-TYPE_C", price: 3000, stock: 30 },
+            "6972573337538": { name: "WLIW X213 USB-TYPE_C", price: 5000, stock: 30 },
+            "6972573335077": { name: "WLIW T66 USB-MICRO", price: 5000, stock: 30 },
+            "6976504663871": { name: "FLATWIRE USB-IPHONE", price: 5000, stock: 30 },
+            "6941950218456": { name: "MX-CB307 TYPE-C-IPHONE", price: 7000, stock: 30 },
+            "6954176814968": { name: "AORAX 106 USB-TYPE C ADAPT", price: 12000, stock: 30 },
+            "6978652148781": { name: "AORAX 886Plus TYPEC-TYPEC", price: 12000, stock: 30 },
+            "6977465962140": { name: "AORAX JS-02 PD+QC", price: 8000, stock: 30 },
+            "195949121319": { name: "USB-C 20W ADAPTER", price: 13000, stock: 30 },
+            "190198001733": { name: "EarPods Lightning", price: 13000, stock: 30 },
+            "190198496263": { name: "USB-C to Lightining", price: 5000, stock: 30 },
+            "194252156926": { name: "IPHONE 14PM 25W ADAPTER", price: 25000, stock: 30 },
+            "6761546315549": { name: "AORAX 656 USB TO LIGHT/TYPEC", price: 6000, stock: 30 },
+            "8655106412015": { name: "VJP VI-530", price: 5000, stock: 30 }
+        };
+
+        let db = JSON.parse(localStorage.getItem('ahmad_pos_db')) || initialData;
         let history = JSON.parse(localStorage.getItem('ahmad_pos_history')) || [];
         let cart = [];
 
-        // گەڕانی پێشکەوتوو بۆ ناو و بارکۆد
         function advancedSearch(val) {
             const resultsDiv = document.getElementById('searchResults');
             if (val.trim().length === 0) { resultsDiv.style.display = "none"; return; }
-            
             const matches = Object.keys(db).filter(key => 
                 db[key].name.toLowerCase().includes(val.toLowerCase()) || key.includes(val)
             );
-
             if (matches.length > 0) {
                 resultsDiv.innerHTML = matches.map(key => `
                     <div class="search-item" onclick="selectItem('${key}')">
                         <span>${db[key].name}</span>
-                        <span class="stock-info">📦 ${db[key].stock} دانە</span>
-                    </div>
-                `).join('');
+                        <span style="color:var(--primary)">${db[key].price.toLocaleString()} IQD</span>
+                    </div>`).join('');
                 resultsDiv.style.display = "block";
-            } else {
-                resultsDiv.style.display = "none";
-            }
+            } else { resultsDiv.style.display = "none"; }
         }
 
         function selectItem(key) {
@@ -136,32 +146,25 @@
 
         function addToCart(code) {
             if (db[code]) {
-                if (db[code].stock <= 0) { alert("ببوورە لە ستۆک نەماوە!"); return; }
+                if (db[code].stock <= 0) { alert("لە ستۆک نەماوە!"); return; }
                 const found = cart.find(i => i.code === code);
-                if (found) {
-                    if (found.qty < db[code].stock) found.qty++;
-                    else alert("بڕی زیاتر لە ستۆک نییە!");
-                } else {
-                    cart.push({ code: code, name: db[code].name, price: db[code].price, qty: 1 });
-                }
+                if (found) found.qty++; 
+                else cart.push({ code: code, name: db[code].name, price: db[code].price, qty: 1 });
                 beep.play();
                 renderCart();
             }
         }
 
         function renderCart() {
-            const container = document.getElementById('cartItems');
-            container.innerHTML = "";
+            const container = document.getElementById('cartItems'); container.innerHTML = "";
             let total = 0;
             cart.forEach((item, idx) => {
                 total += (item.price * item.qty);
-                container.innerHTML += `
-                    <div class="cart-item">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span><b>${item.qty}x</b> ${item.name}</span>
-                            <input type="number" class="price-edit" value="${item.price}" onchange="updatePrice(${idx}, this.value)">
-                        </div>
-                    </div>`;
+                container.innerHTML += `<div class="cart-item">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span><b>${item.qty}x</b> ${item.name}</span>
+                        <input type="number" class="price-edit" value="${item.price}" onchange="updatePrice(${idx}, this.value)">
+                    </div></div>`;
             });
             document.getElementById('totalPrice').innerText = total.toLocaleString() + " IQD";
             document.getElementById('btnDone').style.display = cart.length > 0 ? "block" : "none";
@@ -169,40 +172,33 @@
         }
 
         function updatePrice(idx, val) { cart[idx].price = parseInt(val) || 0; renderCart(); }
-        function emptyCart() { if(confirm("سەبەتەکە پاک بکرێتەوە؟")) { cart = []; renderCart(); } }
+        function emptyCart() { cart = []; renderCart(); }
 
         function finishSale() {
             const now = new Date();
             const dateStr = now.toLocaleDateString('ku-IQ') + " " + now.toLocaleTimeString('ku-IQ');
-            let total = 0;
-            let itemsText = "";
-
+            let total = 0; let itemsText = "";
             cart.forEach(i => {
                 total += (i.price * i.qty);
                 itemsText += `• ${i.name} (${i.qty})%0A`;
                 db[i.code].stock -= i.qty;
             });
-
             history.unshift({ date: dateStr, items: itemsText.replace(/%0A/g, ', '), total: total });
             localStorage.setItem('ahmad_pos_db', JSON.stringify(db));
             localStorage.setItem('ahmad_pos_history', JSON.stringify(history));
-
-            window.open(`https://wa.me/9647510074008?text=✅ کڕین ئەنجام درا - مۆبایلی ئەحمەد%0A📅 ${dateStr}%0A------------------%0A${itemsText}💰 کۆی گشتی: ${total.toLocaleString()} IQD`, '_blank');
+            window.open(`https://wa.me/9647510074008?text=✅ فرۆشرا - مۆبایلی ئەحمەد%0A📅 ${dateStr}%0A------------------%0A${itemsText}💰 کۆی گشتی: ${total.toLocaleString()} IQD`, '_blank');
             cart = []; renderCart();
         }
 
         function renderHistory() {
             const container = document.getElementById('historyList');
-            if (history.length === 0) { container.innerHTML = "<p style='text-align:center; color:#888;'>هیچ مێژوویەک تۆمار نەکراوە</p>"; return; }
-            container.innerHTML = history.map(h => `
-                <div class="history-card">
-                    <div class="history-header"><span>📅 ${h.date}</span><span>${h.total.toLocaleString()} IQD</span></div>
-                    <div style="color:#555; margin-top:5px;">${h.items}</div>
-                </div>
-            `).join('');
+            if (history.length === 0) { container.innerHTML = "<p style='text-align:center; color:#888;'>هیچ مێژوویەک نییە</p>"; return; }
+            container.innerHTML = history.map(h => `<div class="history-card">
+                <div class="history-header"><span>📅 ${h.date}</span><span>${h.total.toLocaleString()} IQD</span></div>
+                <div style="color:#555;">${h.items}</div></div>`).join('');
         }
 
-        function clearHistory() { if(confirm("هەموو مێژووی فرۆشتن بسڕێتەوە؟")) { history = []; localStorage.setItem('ahmad_pos_history', JSON.stringify(history)); renderHistory(); } }
+        function clearHistory() { if(confirm("مێژوو بسڕێتەوە؟")) { history = []; localStorage.setItem('ahmad_pos_history', JSON.stringify(history)); renderHistory(); } }
 
         function switchTab(t) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -220,8 +216,7 @@
             if(b && n && p) {
                 db[b] = { name: n, price: parseInt(p), stock: parseInt(s) || 0 };
                 localStorage.setItem('ahmad_pos_db', JSON.stringify(db));
-                alert("بە سەرکەوتوویی پاشەکەوت کرا ✅");
-                document.getElementById('newBar').value = ""; document.getElementById('newName').value = "";
+                alert("پاشەکەوت کرا ✅");
             }
         }
 
