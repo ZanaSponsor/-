@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zana Store - Full Admin Control</title>
+    <title>Zana Store - Admin Control</title>
     <link href="https://fonts.cdnfonts.com/css/rabar" rel="stylesheet">
     <style>
-        :root { --p: #1e3a8a; --s: #22c55e; --fastpay: #e31e24; --bg: #f1f5f9; --admin: #7c3aed; --reject: #dc2626; --warning: #f59e0b; --gray: #64748b; }
+        :root { --p: #1e3a8a; --s: #22c55e; --fastpay: #e31e24; --bg: #f1f5f9; --admin: #7c3aed; --reject: #dc2626; --warning: #f59e0b; }
         body { font-family: 'Rabar', sans-serif; background: var(--bg); margin: 0; }
         .container { max-width: 1200px; margin: auto; padding: 20px; }
         .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #e2e8f0; border-radius: 10px; font-family: 'Rabar'; box-sizing: border-box; }
-        .btn { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; font-family: 'Rabar'; font-weight: bold; width: 100%; transition: 0.3s; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #e2e8f0; border-radius: 10px; font-family: 'Rabar'; box-sizing: border-box; }
+        .btn { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; font-family: 'Rabar'; font-weight: bold; width: 100%; }
         .btn-p { background: var(--p); color: white; }
         .btn-s { background: var(--s); color: white; }
         .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; width: auto; margin: 2px; border: none; cursor: pointer; font-family: 'Rabar'; }
@@ -19,15 +19,11 @@
         .btn-reject { background: var(--reject); color: white; }
         #main-store, #admin-panel { display: none; grid-template-columns: 1fr 350px; gap: 20px; }
         .header { grid-column: 1/-1; display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 25px; border-radius: 15px; margin-bottom: 10px; }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
-        .product-item { background: white; border: 2px solid #f1f5f9; padding: 15px; border-radius: 15px; text-align: center; cursor: pointer; position: relative; }
         .history-item { border-bottom: 1px solid #eee; padding: 15px 0; display: flex; justify-content: space-between; align-items: center; }
         .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; }
-        .active, .completed { background: #dcfce7; color: #166534; }
         .pending { background: #fef3c7; color: #92400e; }
+        .active { background: #dcfce7; color: #166534; }
         .rejected { background: #fee2e2; color: #991b1b; }
-        .tab-btn { background: #e2e8f0; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-family: 'Rabar'; margin-left: 5px; }
-        .tab-btn.active-tab { background: var(--admin); color: white; }
         @media (max-width: 850px) { #main-store, #admin-panel { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -40,88 +36,52 @@
             <input type="text" id="lPhone" placeholder="ژمارەی مۆبایل یان Admin">
             <input type="password" id="lPass" placeholder="پاسۆرد">
             <button class="btn btn-p" onclick="login()">چوونە ژوورەوە</button>
-            <p onclick="toggleAuth(true)" style="cursor:pointer; color:gray; font-size:14px; margin-top:15px;">دروستکردنی هەژماری نوێ</p>
+            <p onclick="toggleAuth(true)" style="cursor:pointer; color:gray; font-size:14px; margin-top:15px;">دروستکردنی هەژمار</p>
         </div>
         <div id="signup-form" style="display:none;">
             <input type="text" id="rName" placeholder="ناوی تەواو">
             <input type="number" id="rPhone" placeholder="ژمارەی مۆبایل">
             <input type="password" id="rPass" placeholder="پاسۆرد">
-            <button class="btn btn-s" onclick="signup()">داواکردنی هەژمار</button>
-            <p onclick="toggleAuth(false)" style="cursor:pointer; color:gray; font-size:14px; margin-top:15px;">هەژمارم هەیە</p>
+            <button class="btn btn-s" onclick="signup()">تۆمارکردن و ناردن بۆ ئادمین</button>
+            <p onclick="toggleAuth(false)" style="cursor:pointer; color:gray; font-size:14px; margin-top:15px;">گەڕانەوە بۆ چوونەژوورەوە</p>
         </div>
     </div>
 
-    <div id="status-message" class="card" style="display:none; text-align:center; max-width:500px; margin:60px auto;">
-        <h2 id="status-title" style="color:var(--warning);">⚠️ چاوەڕوان بە</h2>
-        <p id="status-desc">هەژمارەکەت لەژێر پێداچوونەوەدایە.</p>
-        <button class="btn btn-p" onclick="logout()">گەڕانەوە</button>
-    </div>
-
-    <div id="main-store">
-        <div class="header"><h3>فڕۆشگای زانا</h3><button onclick="logout()" class="btn btn-sm" style="background:#fee2e2; color:#b91c1c;">دەرچوون</button></div>
-        <div>
-            <div class="card">
-                <h3>🎮 کاڵاکان</h3>
-                <div id="user-product-list" class="product-grid"></div>
-            </div>
-            <div class="card"><h3>📜 مێژووی داواکارییەکان</h3><div id="history-list"></div></div>
-        </div>
-        <div class="card" style="height:fit-content;">
-            <h3>🛒 سەبەتە</h3>
-            <div id="cart-list"></div>
-            <div style="font-size:20px; font-weight:bold; margin-top:15px; border-top:1px solid #eee; padding-top:10px; display:flex; justify-content:space-between;">
-                <span>کۆ:</span><span id="total-price">0 د.ک</span>
-            </div>
-            <button class="btn btn-s" style="margin-top:15px;" onclick="checkOut()">تەواوکردنی کڕین</button>
-        </div>
+    <div id="wait-screen" class="card" style="display:none; text-align:center; max-width:500px; margin:60px auto;">
+        <h2 style="color:var(--warning);">⚠️ چاوەڕوانی چالاککردن بە</h2>
+        <p>زانیارییەکانت نێردرا بۆ ئادمین. تکایە چاوەڕێ بکە تا هەژمارەکەت چالاک دەکرێت.</p>
+        <button class="btn btn-p" onclick="location.reload()">باشە</button>
     </div>
 
     <div id="admin-panel">
-        <div class="header" style="background:var(--admin); color:white;"><h3>ADMIN CONTROL PANEL</h3><button onclick="logout()" class="btn btn-sm" style="background:white;">دەرچوون</button></div>
+        <div class="header" style="background:var(--admin); color:white;">
+            <h3>بەشی بەڕێوبەر (ئادمین)</h3>
+            <button onclick="logout()" class="btn btn-sm" style="background:white;">دەرچوون</button>
+        </div>
         
         <div class="card" style="grid-column: 1 / -1;">
-            <h3>➕ زیادکردنی کاڵا</h3>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="newProdName" placeholder="ناوی کاڵا (بۆ نموونە 60 UC)">
-                <input type="number" id="newProdPrice" placeholder="نرخ بە دینار">
-                <button class="btn btn-s" style="width: auto;" onclick="addProduct()">زیادکردن</button>
-            </div>
+            <h3 style="color:var(--admin);">👤 هەژمارە نوێیە چاوەڕوانەکان</h3>
+            <div id="admin-pending-users"></div>
         </div>
 
         <div class="card" style="grid-column: 1 / -1;">
-            <h3>👤 بەڕێوبەرایەتی هەژمارەکان</h3>
-            <div style="margin-bottom: 15px;">
-                <button class="tab-btn active-tab" id="tab-u-new" onclick="switchUserTab('pending')">نوێیەکان</button>
-                <button class="tab-btn" id="tab-u-old" onclick="switchUserTab('processed')">چالاک و ڕەتکراوەکان</button>
-            </div>
-            <div id="admin-user-list"></div>
+            <h3 style="color:var(--s);">✅ هەژمارە چالاکەکان و ڕەتکراوەکان</h3>
+            <div id="admin-history-users"></div>
         </div>
+    </div>
 
-        <div class="card" style="grid-column: 1 / -1;">
-            <h3>📥 داواکارییەکان</h3>
-            <div style="margin-bottom: 15px;">
-                <button class="tab-btn active-tab" id="tab-o-new" onclick="switchOrderTab('pending')">نوێیەکان</button>
-                <button class="tab-btn" id="tab-o-old" onclick="switchOrderTab('processed')">تەواوکراو و ڕەتکراوەکان</button>
-            </div>
-            <div id="admin-order-list"></div>
+    <div id="main-store">
+        <div class="header"><h3>ZANA STORE</h3><button onclick="logout()" class="btn btn-sm" style="background:#fee2e2; color:#b91c1c;">دەرچوون</button></div>
+        <div class="card" style="grid-column: 1 / -1; text-align: center;">
+            <h2 style="color:var(--s);">بەخێرهاتی! هەژمارەکەت چالاکە.</h2>
+            <p>لێرەدا دەتوانیت داواکارییەکانت ئەنجام بدەیت.</p>
         </div>
     </div>
 </div>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('zana_pro_v4')) || { 
-        users: [], 
-        orders: [], 
-        products: [
-            {id: 1, n: '60 UC', p: 1500},
-            {id: 2, n: '325 UC', p: 7250},
-            {id: 3, n: '1000 Coins', p: 19000}
-        ] 
-    };
-    let loggedUser = JSON.parse(localStorage.getItem('zana_pro_logged'));
-    let cart = [];
-    let currentUStatus = 'pending';
-    let currentOStatus = 'pending';
+    let db = JSON.parse(localStorage.getItem('zana_store_db')) || { users: [], orders: [] };
+    let loggedUser = JSON.parse(localStorage.getItem('zana_logged'));
 
     if(loggedUser) {
         if(loggedUser.phone === 'ADMIN') showAdmin();
@@ -132,148 +92,90 @@
 
     function signup() {
         const n=document.getElementById('rName').value, p=document.getElementById('rPhone').value, ps=document.getElementById('rPass').value;
-        if(p.length<11) return alert("ژمارە هەڵەیە");
+        if(!n || !p || !ps) return alert("تکایە هەموو خانەکان پڕ بکەرەوە");
+        
+        // زیادکردنی بەکارهێنەر بە ستاتۆسی pending
         db.users.push({name:n, phone:p, pass:ps, status:'pending'});
-        save(); alert("داواکاری نێردرا."); location.reload();
+        save();
+        
+        document.getElementById('auth-section').style.display='none';
+        document.getElementById('wait-screen').style.display='block';
     }
 
     function login() {
         const p=document.getElementById('lPhone').value, ps=document.getElementById('lPass').value;
-        if(p==='ADMIN' && ps==='112233') { loggedUser={phone:'ADMIN', name:'Admin'}; localStorage.setItem('zana_pro_logged', JSON.stringify(loggedUser)); showAdmin(); return; }
+        if(p==='ADMIN' && ps==='112233') {
+            loggedUser={phone:'ADMIN', name:'بەڕێوبەر'};
+            localStorage.setItem('zana_logged', JSON.stringify(loggedUser));
+            showAdmin(); return;
+        }
         const u = db.users.find(x=>x.phone===p && x.pass===ps);
-        if(u) { loggedUser=u; localStorage.setItem('zana_pro_logged', JSON.stringify(u)); checkStatus(); } else alert("هەڵەیە");
+        if(u) {
+            loggedUser = u;
+            localStorage.setItem('zana_logged', JSON.stringify(u));
+            checkStatus();
+        } else alert("زانیارییەکان هەڵەن");
     }
 
     function checkStatus() {
         const u = db.users.find(x=>x.phone === loggedUser.phone);
-        if(u.status !== 'active') {
+        if(u.status === 'pending') {
             document.getElementById('auth-section').style.display='none';
-            document.getElementById('status-message').style.display='block';
-            if(u.status === 'rejected') {
-                document.getElementById('status-title').innerText = "❌ ڕەتکرایەوە";
-                document.getElementById('status-desc').innerText = "هەژمارەکەت ڕەتکراوەتەوە.";
-            }
-        } else initStore();
-    }
-
-    function initStore() {
-        document.getElementById('auth-section').style.display='none';
-        document.getElementById('main-store').style.display='grid';
-        renderProducts();
-        renderHistory();
+            document.getElementById('wait-screen').style.display='block';
+        } else if(u.status === 'active') {
+            document.getElementById('auth-section').style.display='none';
+            document.getElementById('main-store').style.display='grid';
+        } else {
+            alert("هەژمارەکەت ڕەتکراوەتەوە.");
+            logout();
+        }
     }
 
     function showAdmin() {
         document.getElementById('auth-section').style.display='none';
         document.getElementById('admin-panel').style.display='grid';
-        renderAdminUsers();
-        renderAdminOrders();
+        renderAdminLists();
     }
 
-    function logout() { localStorage.removeItem('zana_pro_logged'); location.reload(); }
+    function renderAdminLists() {
+        const pendingList = document.getElementById('admin-pending-users');
+        const historyList = document.getElementById('admin-history-users');
+        
+        const pendings = db.users.filter(u => u.status === 'pending');
+        const history = db.users.filter(u => u.status !== 'pending');
 
-    // Product Functions
-    function addProduct() {
-        const n = document.getElementById('newProdName').value;
-        const p = document.getElementById('newProdPrice').value;
-        if(!n || !p) return;
-        db.products.push({id: Date.now(), n, p: parseInt(p)});
-        save(); renderProducts();
-        document.getElementById('newProdName').value = '';
-        document.getElementById('newProdPrice').value = '';
-    }
+        pendingList.innerHTML = pendings.map(u => `
+            <div class="history-item">
+                <div><b>${u.name}</b> (${u.phone})</div>
+                <div>
+                    <button class="btn-sm btn-admin" onclick="updateStatus('${u.phone}', 'active')">چالاککردن</button>
+                    <button class="btn-sm btn-reject" onclick="updateStatus('${u.phone}', 'rejected')">ڕەتکردنەوە</button>
+                </div>
+            </div>
+        `).join('') || "هیچ داواکارییەکی نوێ نییە";
 
-    function deleteProduct(id) {
-        db.products = db.products.filter(x => x.id !== id);
-        save(); renderProducts();
-    }
-
-    function renderProducts() {
-        const list = document.getElementById('user-product-list');
-        list.innerHTML = db.products.map(p => `
-            <div class="product-item" onclick="addToCart('${p.n}', ${p.p})">
-                ${loggedUser.phone === 'ADMIN' ? `<button onclick="event.stopPropagation(); deleteProduct(${p.id})" style="position:absolute; top:5px; right:5px; background:red; color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer;">×</button>` : ''}
-                ${p.n}<b>${p.p.toLocaleString()}</b>
+        historyList.innerHTML = history.map(u => `
+            <div class="history-item">
+                <div><b>${u.name}</b> (${u.phone})</div>
+                <span class="status-badge ${u.status}">${u.status === 'active' ? 'چالاکە' : 'ڕەتکراوە'}</span>
             </div>
         `).join('');
     }
 
-    // Cart & Order
-    function addToCart(n, p) { let i=cart.find(x=>x.n===n); if(i) i.q++; else cart.push({n, p, q:1}); renderCart(); }
-    function renderCart() {
-        const l=document.getElementById('cart-list'); l.innerHTML=""; let t=0;
-        cart.forEach((i,x)=>{ t+=i.p*i.q; l.innerHTML+=`<div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span>${i.n} x${i.q}</span><span>${(i.p*i.q).toLocaleString()} <button onclick="cart.splice(${x},1);renderCart()" style="color:red;border:none;background:none;">✕</button></span></div>`; });
-        document.getElementById('total-price').innerText = t.toLocaleString() + " د.ک";
+    function updateStatus(phone, newStatus) {
+        const u = db.users.find(x => x.phone === phone);
+        u.status = newStatus;
+        save();
+        renderAdminLists();
+        
+        let msg = newStatus === 'active' ? "سڵاو، هەژمارەکەت چالاک کرا ✅" : "سڵاو، داواکارییەکەت ڕەتکرایەوە ❌";
+        if(confirm("دەتەوێت نامە بۆ واتسئاپی بەکارهێنەر بنێریت؟")) {
+            window.open(`https://wa.me/964${phone.substring(1)}?text=${encodeURIComponent(msg)}`);
+        }
     }
 
-    function checkOut() {
-        if(cart.length === 0) return;
-        const id = Math.floor(1000 + Math.random() * 9000);
-        const order = { id, userPhone: loggedUser.phone, userName: loggedUser.name, items: cart.map(i=>`${i.n} x${i.q}`).join(', '), total: document.getElementById('total-price').innerText, date: new Date().toLocaleString('ku-IQ'), status: 'pending' };
-        db.orders.unshift(order); save();
-        window.open(`https://wa.me/9647510074008?text=داواکاری#${id}%0Aکڕیار:${loggedUser.name}%0Aکاڵا:${order.items}%0Aکۆ:${order.total}`);
-        cart=[]; renderCart(); renderHistory(); alert("نێردرا");
-    }
-
-    function renderHistory() {
-        const my = db.orders.filter(o=>o.userPhone === loggedUser.phone);
-        document.getElementById('history-list').innerHTML=my.map(h=>`<div class="history-item"><div><b>#${h.id}</b><br><small>${h.items}</small></div><span class="status-badge ${h.status}">${h.status}</span></div>`).join('');
-    }
-
-    // Admin Tabs & Management
-    function switchUserTab(s) {
-        currentUStatus = s;
-        document.getElementById('tab-u-new').classList.toggle('active-tab', s==='pending');
-        document.getElementById('tab-u-old').classList.toggle('active-tab', s==='processed');
-        renderAdminUsers();
-    }
-
-    function switchOrderTab(s) {
-        currentOStatus = s;
-        document.getElementById('tab-o-new').classList.toggle('active-tab', s==='pending');
-        document.getElementById('tab-o-old').classList.toggle('active-tab', s==='processed');
-        renderAdminOrders();
-    }
-
-    function renderAdminUsers() {
-        const list = currentUStatus === 'pending' ? db.users.filter(u=>u.status==='pending') : db.users.filter(u=>u.status!=='pending');
-        document.getElementById('admin-user-list').innerHTML = list.map(u=>`<div class="history-item">
-            <div><b>${u.name}</b> (${u.phone})</div>
-            <div>
-                ${u.status==='pending' ? `
-                    <button class="btn-sm btn-admin" onclick="setUserStatus('${u.phone}','active')">چالاککردن</button>
-                    <button class="btn-sm btn-reject" onclick="setUserStatus('${u.phone}','rejected')">ڕەتکردنەوە</button>
-                ` : `<span class="status-badge ${u.status}">${u.status}</span>`}
-            </div>
-        </div>`).join('') || "هیچ نییە";
-    }
-
-    function renderAdminOrders() {
-        const list = currentOStatus === 'pending' ? db.orders.filter(o=>o.status==='pending') : db.orders.filter(o=>o.status!=='pending');
-        document.getElementById('admin-order-list').innerHTML = list.map(o=>`<div class="history-item">
-            <div><b>#${o.id} - ${o.userName}</b><br><small>${o.items} | ${o.total}</small></div>
-            <div>
-                ${o.status==='pending' ? `
-                    <button class="btn-sm btn-admin" onclick="setOrdStatus('${o.id}','completed')">تەواو</button>
-                    <button class="btn-sm btn-reject" onclick="setOrdStatus('${o.id}','rejected')">ڕەت</button>
-                ` : `<span class="status-badge ${o.status}">${o.status}</span>`}
-            </div>
-        </div>`).join('') || "هیچ نییە";
-    }
-
-    function setUserStatus(p, s) {
-        db.users.find(x=>x.phone===p).status = s; save(); renderAdminUsers();
-        let msg = s==='active' ? "هەژمارەکەت چالاک کرا ✅" : "داواکاری هەژمارەکەت ڕەتکرایەوە ❌";
-        if(confirm("نامە بنێردرێت؟")) window.open(`https://wa.me/964${p.substring(1)}?text=${encodeURIComponent(msg)}`);
-    }
-
-    function setOrdStatus(id, s) {
-        const o = db.orders.find(x=>x.id==id); o.status=s; save(); renderAdminOrders();
-        let msg = s==='completed' ? `داواکاری #${id} تەواو بوو ✅` : `داواکاری #${id} ڕەتکرایەوە ❌`;
-        if(confirm("نامە بنێردرێت؟")) window.open(`https://wa.me/964${o.userPhone.substring(1)}?text=${encodeURIComponent(msg)}`);
-    }
-
-    function save() { localStorage.setItem('zana_pro_v4', JSON.stringify(db)); }
+    function logout() { localStorage.removeItem('zana_logged'); location.reload(); }
+    function save() { localStorage.setItem('zana_store_db', JSON.stringify(db)); }
 </script>
 </body>
 </html>
