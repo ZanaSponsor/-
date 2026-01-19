@@ -3,114 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سیستەمی وەسڵی زانا ئادەم</title>
+    <title>کۆگای زانا ئادەم - Smart POS</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --primary: #2d3748; --accent: #3182ce; --fastpay: #e31e24; --success: #25D366; --bg: #f8fafc; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); padding: 10px; margin: 0; }
-        .container { max-width: 800px; margin: 20px auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .header { text-align: center; border-bottom: 3px solid var(--accent); padding-bottom: 15px; margin-bottom: 25px; }
-        .info-row { display: flex; gap: 10px; margin-bottom: 15px; text-align: right; }
-        .info-row div { flex: 1; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; color: var(--primary); }
-        input, select { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
-        .search-box { background: #ebf8ff; border-color: var(--accent); }
-        #receipt-area { padding: 30px; border: 1px solid #e2e8f0; border-radius: 15px; background: #fff; margin-top: 25px; position: relative; }
-        .receipt-header { text-align: center; margin-bottom: 20px; border-bottom: 2px dashed #eee; padding-bottom: 10px; }
-        .item-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f1f1; font-size: 15px; text-align: right; }
-        .total-box { font-size: 32px; font-weight: bold; color: var(--fastpay); text-align: center; padding: 20px; background: #fff5f5; border-radius: 15px; margin-top: 25px; border: 2px solid #feb2b2; }
-        .btn-main { background: var(--accent); color: white; border: none; padding: 18px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; margin-top: 10px; }
-        .remove-btn { color: #e53e3e; cursor: pointer; font-weight: bold; background: none; border: none; font-size: 18px; }
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #3b82f6;
+            --accent: #f43f5e;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+            color: #1e293b;
+        }
+        .main-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .main-wrapper { grid-template-columns: 1fr; }
+        }
+        .card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            grid-column: 1 / -1;
+        }
+        .header h1 { color: var(--primary); margin: 0; font-size: 2.5rem; }
+        .header p { color: #64748b; margin: 5px 0; }
+        
+        /* Inputs & Search */
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--primary); }
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+            box-sizing: border-box;
+        }
+        input:focus { border-color: var(--secondary); outline: none; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        .search-res {
+            border: 2px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: -5px;
+        }
+
+        /* Cart & Receipt Style */
+        .cart-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .receipt-container {
+            background: #fff;
+            border: 2px solid #f1f5f9;
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 400px;
+        }
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .item-info { flex-grow: 1; text-align: right; }
+        .item-price { font-weight: bold; color: var(--primary); margin-left: 15px; }
+        .remove-btn {
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .remove-btn:hover { background: #fecaca; }
+
+        .total-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px dashed #e2e8f0;
+            text-align: center;
+        }
+        .total-amount {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent);
+            display: block;
+        }
+        .btn-send {
+            background: #22c55e;
+            color: white;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-send:hover { background: #16a34a; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3); }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h1 style="margin:0; color: var(--accent);">کۆگای زانا ئادەم</h1>
-        <p style="margin:5px 0; color: #718096;">بۆ فرۆشتنی شاشە و پارچەی مۆبایل</p>
-        <p style="font-size: 12px; color: #a0aec0;">ناونیشان: هەولێر - بازاڕی مۆبایل</p>
-    </div>
+<div class="header">
+    <h1>کۆگای زانا ئادەم</h1>
+    <p>سیستەمی فۆشتنی شاشە - دیزاینی مۆدێرن</p>
+    <p style="font-size: 0.9rem;">هەولێر - بازاڕی مۆبایل</p>
+</div>
 
-    <div class="info-row">
-        <div>
-            <label>ناوی کڕیار:</label>
-            <input type="text" id="custName" placeholder="ناوی تەواو بنووسە...">
+<div class="main-wrapper">
+    <div class="card">
+        <div class="input-group">
+            <label>👤 ناوی کڕیار</label>
+            <input type="text" id="custName" placeholder="بۆ کێ دەنوسرێت؟">
         </div>
-        <div>
-            <label>بەروار:</label>
-            <input type="text" id="currentDate" readonly>
+
+        <div class="input-group">
+            <label>🔍 گەڕان بۆ مۆدێل</label>
+            <input type="text" id="searchInput" placeholder="ناوی شاشەکە لێرە بنووسە..." oninput="filterItems()">
+            <select id="itemSelect" size="10" class="search-res" onclick="addItem()">
+                </select>
         </div>
     </div>
 
-    <div style="text-align: right; margin-bottom: 20px;">
-        <label>بۆ مۆدێل بگەڕێ (ناوی شاشەکە بنووسە):</label>
-        <input type="text" id="searchInput" class="search-box" placeholder="بۆ نموونە: iPhone 13..." oninput="filterItems()">
-        <select id="itemSelect" size="8" style="margin-top: 10px;" onclick="addItem()">
-        </select>
-    </div>
-
-    <div id="receipt-area">
-        <div class="receipt-header">
-            <h2 style="margin:0;">وەسڵی فرۆشتن</h2>
+    <div class="card" id="receipt-box">
+        <div class="cart-title">
+            <h3 style="margin:0;">🛒 سەبەتەی کڕین</h3>
+            <span id="date-label" style="font-size: 0.8rem; color: #64748b;"></span>
         </div>
-        <p id="display-info" style="font-weight: bold; margin-bottom: 15px; text-align: right;">کڕیار: ---</p>
-        <div id="cart-list"></div>
-        <div class="total-box">کۆی گشتی: <span id="total-amount">0</span> دینار</div>
-    </div>
+        
+        <div class="receipt-container" id="receipt-area">
+            <p id="display-info" style="border-bottom: 1px solid #eee; padding-bottom: 10px; font-weight: 600;">کڕیار: ---</p>
+            <div id="cart-list">
+                <p style="text-align: center; color: #94a3b8; margin-top: 50px;">سەبەتەکە خاڵییە</p>
+            </div>
+            
+            <div class="total-section">
+                <span>کۆی گشتی بۆ پارەدان</span>
+                <span class="total-amount"><span id="total-amount">0</span> دینار</span>
+            </div>
+        </div>
 
-    <button onclick="sendWhatsApp()" class="btn-main" style="background: var(--success);">✅ ناردنی وەسڵ بۆ واتسئاپ</button>
+        <button onclick="sendWhatsApp()" class="btn-send">
+            <span>ناردن بۆ واتسئاپ</span>
+        </button>
+    </div>
 </div>
 
 <script>
-    // لیستی هەموو نرخەکان کە داوات کردبوو (نرخی وێنەکان + ١٠,٠٠٠ دینار)
+    // لیستی مۆدێلەکان بە زیادکردنی ١٠،٠٠٠ دینار
     const products = {
-        "iPhone 6G STANDARD ZY": 19000,
-        "iPhone 6S STANDARD ZY": 20000,
-        "iPhone 7G STANDARD ZY": 20000,
-        "iPhone 8G STANDARD ZY": 20000,
-        "iPhone 6P STANDARD ZY": 21000,
-        "iPhone 6SP STANDARD ZY": 22000,
-        "iPhone 7P STANDARD ZY": 21000,
-        "iPhone 8P STANDARD ZY": 21000,
-        "iPhone 7P ZY INCELL": 26000,
-        "iPhone 8P ZY INCELL": 26000,
-        "iPhone XR ZY HD+": 24000,
-        "iPhone XR ZY FULL HD COF": 28000,
-        "iPhone XR GX اصلی شریکە": 27000,
-        "iPhone X ZY HD+": 24000,
-        "iPhone X ZY FULL HD COF": 28000,
-        "iPhone X GX New Hard اصلی شریکە": 38000,
-        "iPhone XS ZY HD+": 24000,
-        "iPhone XS ZY FULL HD COF": 28000,
-        "iPhone XS GX new Hard اصلی شریکە": 38000,
-        "iPhone 11 ZY HD+": 24000,
-        "iPhone 11 ZY FULL HD COF": 28000,
-        "iPhone 11 GX اصلی شریکە": 27000,
-        "iPhone 11 PRO ZY FULL HD COF": 31000,
-        "iPhone 11 PRO DD OLED": 44000,
-        "iPhone 11 PRO MAX ZY HD+": 28000,
-        "iPhone 12 ZY FULL HD COF": 32000,
-        "iPhone 12 PRO DD OLED": 52000,
-        "iPhone 13 ZY FULL HD COF": 36000,
-        "iPhone 13 GX OLED اصلی شریکە": 57000,
-        "iPhone 13 PRO MAX ZY FULL HD COF": 45000,
-        "iPhone 13 PRO MAX DD OLED SOFT": 64000,
-        "iPhone 14 ZY FULL HD COF": 40000,
-        "iPhone 14 PRO GX OLED": 112000,
-        "iPhone 14 PRO MAX ZY FULL HD": 58000,
-        "iPhone 14 PRO MAX DD OLED SOFT": 95000,
-        "iPhone 15 ZY FULL HD COF": 53000,
-        "iPhone 15 PRO ZY FULL HD COF": 41000,
-        "iPhone 15 PRO MAX ZY FULL HD COF": 62000,
-        "iPhone 15 PRO MAX DD OLED SOFT": 108000,
-        "iPhone 16 ZY FULL HD COF": 60000,
-        "iPhone 16 PRO ZY FULL HD COF": 85000,
-        "iPhone 16 PRO MAX ZY FULL HD COF": 106000
+        "iPhone 6G STANDARD ZY": 19000, "iPhone 6S STANDARD ZY": 20000, "iPhone 7G STANDARD ZY": 20000,
+        "iPhone 8G STANDARD ZY": 20000, "iPhone 6P STANDARD ZY": 21000, "iPhone 6SP STANDARD ZY": 22000,
+        "iPhone 7P STANDARD ZY": 21000, "iPhone 8P STANDARD ZY": 21000, "iPhone 7P ZY INCELL": 26000,
+        "iPhone 8P ZY INCELL": 26000, "iPhone XR ZY HD+": 24000, "iPhone XR ZY FULL HD COF": 28000,
+        "iPhone XR GX اصلی شریکە": 27000, "iPhone X ZY HD+": 24000, "iPhone X ZY FULL HD COF": 28000,
+        "iPhone X GX New Hard اصلی شریکە": 38000, "iPhone XS ZY HD+": 24000, "iPhone XS ZY FULL HD COF": 28000,
+        "iPhone XS GX new Hard اصلی شریکە": 38000, "iPhone 11 ZY HD+": 24000, "iPhone 11 ZY FULL HD COF": 28000,
+        "iPhone 11 GX اصلی شریکە": 27000, "iPhone 11 PRO ZY FULL HD COF": 31000, "iPhone 11 PRO DD OLED": 44000,
+        "iPhone 11 PRO MAX ZY HD+": 28000, "iPhone 12 ZY FULL HD COF": 32000, "iPhone 12 PRO DD OLED": 52000,
+        "iPhone 13 ZY FULL HD COF": 36000, "iPhone 13 GX OLED اصلی شریکە": 57000, "iPhone 13 PRO MAX ZY FULL HD COF": 45000,
+        "iPhone 13 PRO MAX DD OLED SOFT": 64000, "iPhone 14 ZY FULL HD COF": 40000, "iPhone 14 PRO GX OLED": 112000,
+        "iPhone 14 PRO MAX ZY FULL HD": 58000, "iPhone 14 PRO MAX DD OLED SOFT": 95000, "iPhone 15 ZY FULL HD COF": 53000,
+        "iPhone 15 PRO ZY FULL HD COF": 41000, "iPhone 15 PRO MAX ZY FULL HD COF": 62000, "iPhone 15 PRO MAX DD OLED SOFT": 108000,
+        "iPhone 16 ZY FULL HD COF": 60000, "iPhone 16 PRO ZY FULL HD COF": 85000, "iPhone 16 PRO MAX ZY FULL HD COF": 106000
     };
 
-    const now = new Date();
-    document.getElementById('currentDate').value = now.toLocaleDateString('ku-IQ');
+    let cart = [];
+    const date = new Date().toLocaleDateString('ku-IQ');
+    document.getElementById('date-label').innerText = "بەروار: " + date;
 
     function filterItems() {
         const input = document.getElementById('searchInput').value.toLowerCase();
@@ -120,32 +216,41 @@
             if (name.toLowerCase().includes(input)) {
                 let opt = document.createElement('option');
                 opt.value = name;
-                opt.text = `${name} - (${products[name].toLocaleString()} دینار)`;
+                opt.text = `📦 ${name} | ${products[name].toLocaleString()} د.ک`;
                 select.appendChild(opt);
             }
         }
     }
 
-    let cart = [];
     function addItem() {
         const select = document.getElementById('itemSelect');
         const itemName = select.value;
         const custName = document.getElementById('custName').value;
-        if (!custName) return alert("تکایە ناوی کڕیار بنووسە");
+        
+        if (!custName) return alert("تکایە سەرەتا ناوی کڕیار بنووسە!");
         if (itemName) {
             cart.push({name: itemName, price: products[itemName]});
-            document.getElementById('display-info').innerText = "کڕیار: " + custName;
+            document.getElementById('display-info').innerText = "بۆ کڕیار: " + custName;
             updateUI();
+            document.getElementById('searchInput').value = "";
+            filterItems();
         }
     }
 
     function updateUI() {
         const list = document.getElementById('cart-list');
-        list.innerHTML = "";
+        list.innerHTML = cart.length === 0 ? '<p style="text-align: center; color: #94a3b8; margin-top: 50px;">سەبەتەکە خاڵییە</p>' : "";
         let total = 0;
         cart.forEach((item, index) => {
             total += item.price;
-            list.innerHTML += `<div class="item-row"><span>${item.name}</span><span>${item.price.toLocaleString()} د.ک <button class="remove-btn" onclick="removeItem(${index})">✕</button></span></div>`;
+            list.innerHTML += `
+                <div class="item-row">
+                    <div class="item-info">
+                        <div>${item.name}</div>
+                        <div class="item-price">${item.price.toLocaleString()} د.ک</div>
+                    </div>
+                    <button class="remove-btn" onclick="removeItem(${index})">لادان</button>
+                </div>`;
         });
         document.getElementById('total-amount').innerText = total.toLocaleString();
     }
@@ -156,7 +261,11 @@
     }
 
     function sendWhatsApp() {
+        if (cart.length === 0) return alert("سەبەتەکە خاڵییە!");
         const buyer = document.getElementById('custName').value;
+        const element = document.getElementById('receipt-area');
+        html2pdf().from(element).save(`Zana-Adam-${buyer}.pdf`);
+        
         let msg = `*وەسڵی کڕین - زانا ئادەم*%0Aکڕیار: ${buyer}%0Aکۆی گشتی: ${document.getElementById('total-amount').innerText} دینار.`;
         window.open(`https://wa.me/9647501234567?text=${msg}`, '_blank');
     }
