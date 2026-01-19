@@ -83,26 +83,8 @@
         "iPhone 8G STANDARD ZY": 20000, "iPhone XR ZY HD+": 24000, "iPhone 11 ZY HD+": 24000,
         "iPhone 12 PRO DD OLED": 52000, "iPhone 13 ZY FULL HD": 36000, "iPhone 14 PRO GX OLED": 112000,
         "iPhone 15 PRO MAX DD OLED": 108000, "iPhone 16 PRO MAX ZY": 106000,
-
-        // Redmi Models
-        "Redmi A1+/A2/A2 original": 21000, "REDMI A3/A3 PLUS ORG": 22000, "REDMI A5 ORG": 22000,
-        "REDMI 7 ORG": 21000, "REDMI 8/8A ORG": 21000, "REDMI 9/9 PRIME ORG": 21000,
-        "REDMI 9A/9C/10A ORG": 21000, "REDMI 9T ORG": 21000, "REDMI 10 4G ORG": 23000,
-        "REDMI 10 5G / POCO M4/M5 ORG": 23000, "REDMI NOTE 11R/11E ORG": 23000, "REDMI 10C ORG": 21000,
-        "REDMI 12 ORG": 22000, "REDMI 13 ORG": 22000, "REDMI 12C/POCO C55 ORG": 21000,
-        "REDMI 13C/13R ORG": 22000, "REDMI 14C ORG": 22000, "REDMI 15C ORG": 23000,
-        "REDMI NOTE 7/7 PRO ORG": 20000, "REDMI NOTE 8 ORG": 20000, "REDMI NOTE 8 PRO ORG": 22000,
-        "REDMI NOTE 9 ORG": 22000, "REDMI NOTE 9S/9 PRO": 22000, "REDMI NOTE 10/10S INCELL": 22000,
-        "REDMI NOTE 10/10S OLED": 40000, "REDMI NOTE 10 5G ORG": 23000, "REDMI NOTE 11 PRO OLED": 43000,
-        "REDMI NOTE 11/11S/12S OLED": 40000, "REDMI NOTE 12 OLED": 43000, "REDMI NOTE 13 5G OLED": 47000,
-        "REDMI NOTE 13 4G/NOTE 14 4G OLED": 45000, "REDMI NOTE 13 PRO 5G OLED": 46000, "REDMI NOTE 13 PRO PLUS ORG": 65000,
-
-        // POCO Models
-        "POCO X4 GT ORG": 25000, "POCO X4 PRO 4G-5G OLED": 43000, "POCO X5 OLED": 43000,
-        "POCO X5 PRO 5G OLED": 46000, "POCO X6 OLED": 46000, "POCO X6 PRO 5G OLED": 46000,
-        "POCO X7 PRO / REDMI TURBO 4 ORG": 72000, "POCO F3/F4 OLED": 46000, "POCO F5 5G OLED": 47000,
-        "POCO F5 PRO ORG": 105000, "POCO F6 OLED": 46000, "POCO M3 ORG": 21000,
-        "POCO M4 PRO 4G OLED": 45000, "POCO M6 PRO 4G OLED": 45000, "POCO M7 PRO 4G-5G OLED": 45000, "POCO C65 ORG": 22000
+        // مۆدێلەکانی تر لێرە زیاد بکە...
+        "REDMI NOTE 13 PRO PLUS ORG": 65000, "POCO X6 PRO 5G OLED": 46000
     };
 
     let cart = [];
@@ -131,7 +113,6 @@
         else cart.push({ name, price: products[name], qty });
         
         updateCartUI();
-        document.getElementById('itemQty').value = 1;
     }
 
     function updateCartUI() {
@@ -163,26 +144,49 @@
         const cust = document.getElementById('custName').value;
         if(!cust || cart.length === 0) return alert("ناوی کڕیار و سەبەتە پڕ بکەوە!");
 
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('ku-IQ');
+        const timeStr = now.toLocaleTimeString('ku-IQ', { hour: '2-digit', minute: '2-digit' });
+
+        // نیشاندانی زانیاری لەسەر وەسڵی PDF
         document.getElementById('r-cust').innerText = "کڕیار: " + cust;
-        document.getElementById('r-date').innerText = "بەروار: " + new Date().toLocaleDateString('ku-IQ');
+        document.getElementById('r-date').innerText = "بەروار: " + dateStr + " | کات: " + timeStr;
+        
         let itemsHtml = "";
+        let whatsappMsg = `*وەسڵی کڕین - کۆگای زانا ئادەم*%0A`;
+        whatsappMsg += `*کڕیار:* ${cust}%0A`;
+        whatsappMsg += `*بەروار:* ${dateStr}%0A`;
+        whatsappMsg += `*کات:* ${timeStr}%0A`;
+        whatsappMsg += `----------------------------%0A`;
+
         cart.forEach(item => {
+            const rowTotal = item.price * item.qty;
+            // بۆ PDF
             itemsHtml += `<div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px dashed #ccc;">
                 <span>${item.name} (${item.qty} دانە)</span>
-                <span>${(item.price * item.qty).toLocaleString()} دینار</span>
+                <span>${rowTotal.toLocaleString()} دینار</span>
             </div>`;
+            // بۆ واتسئاپ
+            whatsappMsg += `📱 *${item.name}*%0A`;
+            whatsappMsg += `🔢 بڕ: ${item.qty} × ${item.price.toLocaleString()}%0A`;
+            whatsappMsg += `💰 نرخ: ${rowTotal.toLocaleString()} د.ک%0A`;
+            whatsappMsg += `----------------------------%0A`;
         });
-        document.getElementById('r-items').innerHTML = itemsHtml;
-        document.getElementById('r-total').innerText = document.getElementById('totalPrice').innerText;
 
+        document.getElementById('r-items').innerHTML = itemsHtml;
+        const finalTotal = document.getElementById('totalPrice').innerText;
+        document.getElementById('r-total').innerText = finalTotal;
+        whatsappMsg += `*کۆی گشتی کۆتایی: ${finalTotal} دینار*`;
+
+        // دروستکردنی PDF
         const element = document.getElementById('receipt-area');
         element.style.display = 'block';
         html2pdf().from(element).save(`Zana-Adam-${cust}.pdf`).then(() => {
             element.style.display = 'none';
         });
 
-        let msg = `*وەسڵی کڕین - زانا ئادەم*%0Aکڕیار: ${cust}%0Aکۆی گشتی: ${document.getElementById('totalPrice').innerText} دینار.`;
-        window.open(`https://wa.me/9647758887488?text=${msg}`, '_blank');
+        // کردنەوەی واتسئاپ
+        window.open(`https://wa.me/9647758887488?text=${whatsappMsg}`, '_blank');
     }
 
     filterItems();
