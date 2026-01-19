@@ -3,85 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سیستەمی فرۆشتنی زانا + FastPay</title>
+    <title>سیستەمی فرۆشتنی زانا ئادەم</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --primary: #3182ce; --fastpay: #e31e24; --success: #25D366; --bg: #f7fafc; }
-        body { font-family: sans-serif; background: var(--bg); padding: 10px; text-align: center; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        body { font-family: sans-serif; background: var(--bg); padding: 10px; text-align: center; color: #2d3748; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         
-        /* بەشی گەڕان */
-        .search-box { display: flex; gap: 5px; margin-bottom: 20px; }
-        input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
-        .btn-add { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; }
+        .input-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+        input { padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; outline: none; }
+        input:focus { border-color: var(--primary); }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; }
 
-        /* شێوازی وەسڵەکە */
-        #receipt-area { padding: 15px; border: 1px solid #eee; background: #fff; margin-bottom: 15px; border-radius: 10px; }
+        #receipt-area { padding: 15px; border: 2px solid #edf2f7; border-radius: 12px; background: #fff; margin-top: 10px; }
         .item-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
-        .total-box { font-size: 24px; font-weight: bold; color: var(--fastpay); margin: 15px 0; padding: 10px; background: #fff5f5; border-radius: 8px; }
+        .total-box { font-size: 26px; font-weight: bold; color: var(--fastpay); margin-top: 15px; padding: 10px; background: #fff5f5; border-radius: 10px; }
 
-        /* بەشی فاستپەی */
-        .fastpay-card { display: none; margin-top: 20px; padding: 15px; border: 2px solid var(--fastpay); border-radius: 15px; background: #fff; animation: slideUp 0.5s; }
-        .qr-img { width: 220px; height: auto; border-radius: 10px; margin: 10px 0; }
+        .payment-section { display: none; margin-top: 20px; padding: 15px; border: 2px solid var(--fastpay); border-radius: 15px; background: #fff; animation: fadeIn 0.5s; }
+        .qr-img { width: 100%; max-width: 250px; border-radius: 10px; margin: 10px 0; }
+        .upload-area { background: #f8fafc; border: 2px dashed #cbd5e0; padding: 15px; border-radius: 10px; margin-top: 10px; }
         
-        .btn-pay { background: var(--fastpay); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; }
-        .btn-wa { background: var(--success); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .btn-pay { background: var(--fastpay); color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; margin-top: 10px; }
+        .btn-wa { background: var(--success); color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; display: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="color: var(--primary);">کۆگای زانا ئادەم</h2>
-    
-    <div class="search-box">
-        <input type="text" id="partCode" placeholder="کۆدی شاشە، پاتری یان کاڵا..." onkeypress="if(event.key==='Enter') addItem()">
-        <button class="btn-add" onclick="addItem()">+ زیادکردن</button>
+    <h2 style="color: var(--primary); margin-bottom: 5px;">کۆگای زانا ئادەم</h2>
+    <p style="font-size: 14px; color: #718096; margin-bottom: 20px;">سیستەمی فرۆشتنی شاشە و پاتری</p>
+
+    <div class="input-group">
+        <input type="text" id="custName" placeholder="ناوی کڕیار بنووسە (ناچاری)...">
+        <div style="display: flex; gap: 5px;">
+            <input type="text" id="partCode" placeholder="کۆدی پارچە..." style="flex:1;">
+            <button class="btn-add" onclick="addItem()">+ زیادکردن</button>
+        </div>
     </div>
 
     <div id="receipt-area">
-        <h3 style="margin:0;">پسووڵەی کڕین</h3>
-        <p style="font-size:12px; color:#666;">ڕێکەوت: <span id="current-date"></span></p>
-        <hr>
-        <div id="cart-list">
-            </div>
+        <h3 style="margin:0;">وەسڵی فەرمی</h3>
+        <p style="font-size:12px; color:#666;">کڕیار: <span id="display-name">---</span></p>
+        <hr style="border:0; border-top:1px solid #eee;">
+        <div id="cart-list"></div>
         <div class="total-box">کۆی گشتی: <span id="total-amount">0</span> $</div>
     </div>
 
-    <button class="btn-pay" onclick="showFastPay()">💳 پارەدان بە FastPay</button>
+    <button id="checkout-btn" class="btn-pay" onclick="startCheckout()">💳 پارەدان بە فاستپەی</button>
 
-    <div id="fastpay-area" class="fastpay-card">
+    <div id="payment-box" class="payment-section">
         <h4 style="color:var(--fastpay); margin:0;">Zana Adam - FastPay</h4>
         <img src="fastpay_qr.png" class="qr-img" alt="FastPay QR">
-        <p style="font-size:13px; color:#555;">بڕی پارەکە سکان بکە و پاشان وەسڵەکە بنێرە</p>
-        <button class="btn-wa" onclick="sendToWhatsApp()">
-            <span>ناردنی وەسڵ بۆ واتسئاپ</span>
-        </button>
+        
+        <div class="upload-area">
+            <p style="margin:0; font-size:14px;">سکرین‌شۆتی ناردنی پارەکە لێرە دابنێ:</p>
+            <input type="file" id="screenshot" accept="image/*" onchange="showWhatsAppBtn()">
+        </div>
+
+        <button id="wa-btn" class="btn-wa" onclick="generateAndSend()">✅ ناردنی وەسڵ و سکرین بۆ واتسئاپ</button>
     </div>
 </div>
 
 <script>
-    // لیستی کاڵاکانت
+    // لیستی پارچەکان
     const inventory = {
         "S13": { name: "شاشە iPhone 13 Pro", price: 165 },
+        "S14": { name: "شاشە iPhone 14 Pro Max", price: 210 },
         "B12": { name: "پاتری iPhone 12 Mini", price: 35 },
-        "H": { name: "هێرمان White Oats", price: 10 } // بۆ کاڵای هێرمان
+        "B13": { name: "پاتری iPhone 13", price: 45 },
+        "H": { name: "هێرمان Oats", price: 10 } // بۆ کاڵای هێرمان
     };
 
     let cart = [];
-    document.getElementById('current-date').innerText = new Date().toLocaleString('ku-IQ');
 
     function addItem() {
+        const name = document.getElementById('custName').value;
+        if(!name) { alert("تکایە سەرەتا ناوی کڕیار بنووسە!"); return; }
+        
         const code = document.getElementById('partCode').value.toUpperCase();
         const item = inventory[code];
+
         if (item) {
             cart.push(item);
+            document.getElementById('display-name').innerText = name;
             updateUI();
             document.getElementById('partCode').value = "";
-            document.getElementById('fastpay-area').style.display = 'none';
+            document.getElementById('payment-box').style.display = 'none';
+            document.getElementById('checkout-btn').style.display = 'block';
         } else {
-            alert("کۆدەکە هەڵەیە یان لە کۆگا نییە!");
+            alert("ئەم کۆدە بوونی نییە!");
         }
     }
 
@@ -89,36 +100,37 @@
         const list = document.getElementById('cart-list');
         list.innerHTML = "";
         let total = 0;
-        cart.forEach((item, index) => {
+        cart.forEach(item => {
             total += item.price;
-            list.innerHTML += `
-                <div class="item-row">
-                    <span>${item.name}</span>
-                    <span><b>${item.price} $</b></span>
-                </div>`;
+            list.innerHTML += `<div class="item-row"><span>${item.name}</span><span><b>${item.price} $</b></span></div>`;
         });
         document.getElementById('total-amount').innerText = total;
     }
 
-    function showFastPay() {
-        if (cart.length === 0) return alert("سەبەتەکە خاڵییە!");
-        document.getElementById('fastpay-area').style.display = 'block';
+    function startCheckout() {
+        if(cart.length === 0) return alert("سەبەتەکە خاڵییە!");
+        document.getElementById('payment-box').style.display = 'block';
+        document.getElementById('checkout-btn').style.display = 'none';
     }
 
-    async function sendToWhatsApp() {
-        // ١. دروستکردن و داگرتنی PDF
+    function showWhatsAppBtn() {
+        document.getElementById('wa-btn').style.display = 'block';
+    }
+
+    async function generateAndSend() {
+        // ١. دروستکردنی PDF
         const element = document.getElementById('receipt-area');
-        const opt = { margin: 1, filename: 'Zana-Receipt.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
+        const opt = { margin: 1, filename: 'Zana-Receipt.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
         html2pdf().set(opt).from(element).save();
 
-        // ٢. ناردنی وردەکاری بۆ واتسئاپی تۆ
-        const myNumber = "9647758887488"; // ژمارەی خۆت لێرە بنووسە بە فۆرماتی نێودەوڵەتی
-        let message = `*سڵاو کاک زانا، من پارەم داوە بە فاستپەی*%0A`;
-        message += `*وردەکاری کڕین:*%0A`;
-        cart.forEach(item => message += `- ${item.name}: ${item.price}$%0A`);
-        message += `%0A*کۆی گشتی: ${document.getElementById('total-amount').innerText}$*`;
-        
-        window.open(`https://wa.me/${myNumber}?text=${message}`, '_blank');
+        // ٢. ئامادەکردنی نامەی واتسئاپ
+        const myNumber = "964750XXXXXXX"; // ژمارەی خۆت لێرە بنووسە
+        const buyer = document.getElementById('custName').value;
+        let msg = `*سڵاو کاک زانا، من ${buyer} پارەم ناردووە*%0A`;
+        msg += `*کۆی گشتی: ${document.getElementById('total-amount').innerText}$*%0A%0A`;
+        msg += `تکایە سکرین‌شۆتی پارە ناردنەکە لەگەڵ ئەم وەسڵە وەرگرە.`;
+
+        window.open(`https://wa.me/${myNumber}?text=${msg}`, '_blank');
     }
 </script>
 
