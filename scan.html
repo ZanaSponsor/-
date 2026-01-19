@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zana Store - Account & History</title>
+    <title>Zana Store - Payment & History</title>
     <link href="https://fonts.cdnfonts.com/css/rabar" rel="stylesheet">
     <style>
-        :root { --p: #1e3a8a; --accent: #ff0050; --s: #22c55e; --bg: #f8fafc; --fastpay: #e31e24; }
+        :root { --p: #1e3a8a; --accent: #ff0050; --s: #22c55e; --bg: #f8fafc; --fastpay: #e31e24; --fib: #ffd700; }
         body { font-family: 'Rabar', sans-serif; background: var(--bg); margin: 0; padding: 0; }
         .container { max-width: 1100px; margin: auto; padding: 20px; }
         .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
         /* Auth Styles */
         .auth-card { max-width: 400px; margin: 80px auto; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; font-family: 'Rabar'; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; font-family: 'Rabar'; }
         .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; cursor: pointer; font-family: 'Rabar'; font-weight: bold; font-size: 16px; transition: 0.3s; }
         .btn-p { background: var(--p); color: white; }
         .btn-s { background: var(--s); color: white; }
@@ -27,10 +27,13 @@
         .product-item:hover { border-color: var(--p); }
 
         /* History Table */
-        .history-item { border-bottom: 1px solid #eee; padding: 10px 0; font-size: 14px; }
-        .history-item b { color: var(--p); }
+        .history-item { border-bottom: 1px solid #eee; padding: 12px 0; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .status-badge { background: #fff3cd; color: #856404; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: bold; }
 
-        #payment-modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; justify-content:center; align-items:center; }
+        #payment-modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center; }
+        .qr-box { background: #eee; width: 200px; height: 200px; margin: 15px auto; display: flex; align-items: center; justify-content: center; border-radius: 15px; overflow: hidden; }
+        .qr-box img { width: 100%; height: 100%; object-fit: cover; }
+
         @media (max-width: 850px) { #main-store { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -59,13 +62,13 @@
             <h2 style="margin:0;">ZANA STORE</h2>
             <div>
                 <span id="user-name" style="margin-right:15px;"></span>
-                <button onclick="logout()" style="background:var(--accent); border:none; color:white; padding:5px 12px; border-radius:8px; cursor:pointer; font-family:'Rabar';">چوونە دەرەوە</button>
+                <button onclick="logout()" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:5px 12px; border-radius:8px; cursor:pointer; font-family:'Rabar';">دەرچوون</button>
             </div>
         </div>
 
         <div>
             <div class="card">
-                <h3>💎 خزمەتگوزارییەکان</h3>
+                <h3>💎 کاڵاکان هەڵبژێرە</h3>
                 <div class="product-grid">
                     <div class="product-item" onclick="add('60 UC', 1500)">60 UC<br><b>1,500 د.ک</b></div>
                     <div class="product-item" onclick="add('325 UC', 7250)">325 UC<br><b>7,250 د.ک</b></div>
@@ -74,34 +77,43 @@
             </div>
 
             <div class="card">
-                <h3>📜 مێژووی مامەڵەکانت</h3>
+                <h3>📜 مێژووی کڕینەکان</h3>
                 <div id="history-list">
-                    <p style="color:#94a3b8; text-align:center;">هیچ مامەڵەیەک نەکراوە</p>
+                    <p style="color:#94a3b8; text-align:center;">هیچ کڕینێک نییە</p>
                 </div>
             </div>
         </div>
 
         <div class="card" style="height:fit-content; border:2px solid var(--p);">
-            <h3>🛒 سەبەتە</h3>
+            <h3>🛒 سەبەتەی کڕین</h3>
             <div id="cart-list"></div>
             <div style="font-size:22px; font-weight:bold; margin-top:15px; border-top:2px dashed #eee; padding-top:10px; display:flex; justify-content:space-between;">
-                <span>کۆ:</span><span id="total">0 د.ک</span>
+                <span>کۆی گشتی:</span><span id="total">0 د.ک</span>
             </div>
-            <button class="btn btn-s" style="margin-top:15px;" onclick="openPay()">پارەدان</button>
+            <button class="btn btn-s" style="margin-top:15px;" onclick="openPay()">دەستپێکردنی پارەدان</button>
         </div>
     </div>
 </div>
 
 <div id="payment-modal">
-    <div class="card" style="max-width:350px; text-align:center;">
-        <h3 style="color:var(--fastpay);">ناردنی پارە</h3>
-        <p>بڕی پارە: <b id="pay-amt">0</b></p>
-        <div style="background:#f1f5f9; padding:10px; border-radius:10px; margin-bottom:15px;">
-            <small>فاستپەی:</small><br><b>07758887488</b>
+    <div class="card" style="max-width:400px; width:90%; text-align:center;">
+        <h3 id="pay-title">جۆری پارەدان هەڵبژێرە</h3>
+        
+        <select id="payMethod" onchange="updateQR()">
+            <option value="fastpay">FastPay (فاستپەی)</option>
+            <option value="fib">FIB (بانکی نێودەوڵەتی عێراق)</option>
+        </select>
+
+        <div class="qr-box" id="qr-container">
+            <span id="qr-placeholder">بارکۆد</span>
         </div>
-        <input type="text" id="txID" placeholder="Transaction ID بنووسە">
-        <button class="btn btn-p" onclick="confirmOrder()">پشتڕاستکردنەوە</button>
-        <button onclick="document.getElementById('payment-modal').style.display='none'" style="background:none; border:none; color:gray; margin-top:10px; cursor:pointer;">داخستن</button>
+        [attachment_0](attachment)
+
+        <p>بڕی پارە: <b id="pay-amt">0</b></p>
+        <input type="text" id="txID" placeholder="Transaction ID (ژمارەی وەسڵ)">
+        
+        <button class="btn btn-p" onclick="confirmOrder()">پشتڕاستکردنەوەی ناردن</button>
+        <button onclick="document.getElementById('payment-modal').style.display='none'" style="background:none; border:none; color:gray; margin-top:10px; cursor:pointer; font-family:'Rabar';">داخستن</button>
     </div>
 </div>
 
@@ -122,13 +134,12 @@
         const name = document.getElementById('regName').value;
         const phone = document.getElementById('regPhone').value;
         const pass = document.getElementById('regPass').value;
-        if(!name || !phone || !pass) return alert("هەموو خانەکان پڕ بکەوە");
+        if(!name || !phone || !pass) return alert("خانەکان پڕ بکەوە");
         if(users.find(u => u.phone === phone)) return alert("ئەم ژمارەیە پێشتر تۆمار کراوە");
         
-        const newUser = { name, phone, pass, history: [] };
-        users.push(newUser);
+        users.push({ name, phone, pass, history: [] });
         localStorage.setItem('zana_users', JSON.stringify(users));
-        alert("تۆمارکردن سەرکەوتوو بوو، ئێستا بچۆ ژوورەوە");
+        alert("سەرکەوتوو بوو، ئێستا بچۆ ژوورەوە");
         toggleAuth(false);
     }
 
@@ -140,13 +151,10 @@
             currentUser = user;
             localStorage.setItem('zana_logged', JSON.stringify(user));
             showStore();
-        } else { alert("ژمارە یان پاسۆرد هەڵەیە"); }
+        } else { alert("زانیارییەکان هەڵەن"); }
     }
 
-    function logout() {
-        localStorage.removeItem('zana_logged');
-        location.reload();
-    }
+    function logout() { localStorage.removeItem('zana_logged'); location.reload(); }
 
     function showStore() {
         document.getElementById('auth-section').style.display = 'none';
@@ -170,36 +178,48 @@
         document.getElementById('pay-amt').innerText = t.toLocaleString() + " دینار";
     }
 
+    function updateQR() {
+        const method = document.getElementById('payMethod').value;
+        const qrContainer = document.getElementById('qr-container');
+        if(method === 'fastpay') {
+            qrContainer.innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=07758887488" alt="FastPay QR">';
+        } else {
+            qrContainer.innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=FIB-ACCOUNT-DATA" alt="FIB QR">';
+        }
+    }
+
     function openPay() { 
         if(cart.length === 0) return alert("سەبەتە خاڵییە");
-        document.getElementById('payment-modal').style.display = 'flex'; 
+        document.getElementById('payment-modal').style.display = 'flex';
+        updateQR();
     }
 
     function confirmOrder() {
         const tx = document.getElementById('txID').value;
-        if(!tx) return alert("تکایە TXID بنووسە");
+        const method = document.getElementById('payMethod').value;
+        if(!tx) return alert("تکایە ژمارەی وەسڵ (TXID) بنووسە");
 
         const order = {
             date: new Date().toLocaleString('ku-IQ'),
-            items: cart.map(i => i.n).join(', '),
+            items: cart.map(i => i.n).join(' + '),
             total: document.getElementById('total').innerText,
+            status: 'لە پێداچوونەوەیە ⏳',
+            method: method,
             txid: tx
         };
 
-        // پاشەکەوتکردن لە مێژوو
         const userIdx = users.findIndex(u => u.phone === currentUser.phone);
         users[userIdx].history.unshift(order);
         localStorage.setItem('zana_users', JSON.stringify(users));
         
-        // نوێکردنەوەی currentUser
         currentUser = users[userIdx];
         localStorage.setItem('zana_logged', JSON.stringify(currentUser));
 
-        // ناردنی بۆ واتسئاپ
-        let msg = `*داواکاری نوێ*%0A*کڕیار:* ${currentUser.name}%0A*کۆ:* ${order.total}%0A*TXID:* ${tx}%0A*کاڵاکان:* ${order.items}`;
+        // WhatsApp Message
+        let msg = `*داواکاری نوێ*%0A*کڕیار:* ${currentUser.name}%0A*کۆ:* ${order.total}%0A*جۆری پارەدان:* ${method}%0A*TXID:* ${tx}%0A*کاڵاکان:* ${order.items}`;
         window.open(`https://wa.me/9647758887488?text=${msg}`, '_blank');
 
-        alert("داواکارییەکە پاشەکەوت کرا و نێردرا");
+        alert("داواکارییەکەت نێردرا و ئێستا لە پێداچوونەوەیە");
         cart = []; renderCart(); renderHistory();
         document.getElementById('payment-modal').style.display = 'none';
     }
@@ -210,9 +230,11 @@
         hl.innerHTML = "";
         currentUser.history.forEach(h => {
             hl.innerHTML += `<div class="history-item">
-                <b>🗓 ${h.date}</b><br>
-                📦 ${h.items} | 💰 ${h.total}<br>
-                <small>🆔 وەسڵ: ${h.txid}</small>
+                <div>
+                    <b>${h.items}</b><br>
+                    <small>${h.date} | ${h.total}</small>
+                </div>
+                <span class="status-badge">${h.status}</span>
             </div>`;
         });
     }
