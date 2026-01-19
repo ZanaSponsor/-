@@ -3,202 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AHMAD PHONE - POS & Inventory</title>
+    <title>AHMAD PHONE - Cloud POS</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); box-sizing: border-box; flex-grow: 1; }
         .header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         h1 { color: #007bff; margin: 0; font-size: 24px; }
-        
         .tab-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab-buttons button { flex: 1; padding: 10px; font-size: 14px; background: #eee; color: #333; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; }
+        .tab-buttons button { flex: 1; padding: 12px; font-size: 14px; background: #eee; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
         .tab-buttons button.active { background: #007bff; color: white; }
-
         .section { display: none; }
         .section.active { display: block; }
-
         input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; text-align: center; font-size: 16px; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; font-size: 16px; transition: 0.2s; }
-        
+        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; }
         .btn-blue { background-color: #007bff; color: white; }
         .btn-green { background-color: #28a745; color: white; }
         .btn-orange { background-color: #ff9800; color: white; }
-        .btn-red { background-color: #d9534f; color: white; margin-top: 5px; }
-        
+        .btn-red { background-color: #d9534f; color: white; }
         #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; border: 1px solid #ddd; margin-bottom: 10px; }
-        .cart-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f9f9f9; font-size: 14px; align-items: center; }
+        .cart-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
         .stock-info { font-size: 12px; color: #ff9800; display: block; }
-        .total-box { margin-top: 15px; padding: 15px; background: #eef6ff; border-radius: 10px; text-align: center; font-size: 20px; font-weight: bold; color: #d9534f; }
-        .whatsapp-btn { background-color: #25D366; color: white; margin-top: 10px; }
-
+        .total-box { margin-top: 15px; padding: 15px; background: #eef6ff; border-radius: 10px; text-align: center; font-size: 22px; font-weight: bold; color: #d9534f; }
         .footer { margin-top: 30px; padding: 15px; font-size: 13px; color: #777; text-align: center; width: 100%; border-top: 1px solid #ddd; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div class="header">
-            <h1>AHMAD PHONE</h1>
-        </div>
-
+        <div class="header"><h1>AHMAD PHONE</h1></div>
         <div class="tab-buttons">
             <button id="btnSell" class="active" onclick="showSection('sell')">🛒 فرۆشتن</button>
-            <button id="btnAdd" onclick="showSection('add')">📦 کۆگا & تۆمارکردن</button>
+            <button id="btnAdd" onclick="showSection('add')">📦 کۆگا (Cloud)</button>
         </div>
 
         <div id="sellSection" class="section active">
             <input type="text" id="barcodeSell" placeholder="بارکۆد بنووسە">
-            <button class="btn-blue" onclick="addToCart(document.getElementById('barcodeSell').value)">➕ فرۆشتن</button>
+            <button class="btn-blue" onclick="addToCart(document.getElementById('barcodeSell').value)">➕ زیادکردن</button>
             <button class="btn-green" onclick="startScanner('sell')">📷 سکانکردن</button>
-            
             <div id="cartItems"></div>
             <div class="total-box" id="totalPrice">0 IQD</div>
-            
-            <button class="whatsapp-btn" id="waBtn" style="display:none;" onclick="sendToWhatsapp()">✅ تەواوکردن و ناردن</button>
-            <button class="btn-red" id="clearBtn" style="display:none;" onclick="clearCart()">🗑️ پاشگەزبونەوە</button>
+            <button class="btn-green" style="background:#25D366; color:white; width:100%; display:none;" id="waBtn" onclick="sendToWhatsapp()">✅ ناردنی وەصڵ</button>
+            <button class="btn-red" id="clearBtn" style="display:none; width:100%;" onclick="clearCart()">🗑️ سڕینەوە</button>
         </div>
 
         <div id="addSection" class="section">
-            <input type="text" id="newBarcode" placeholder="بارکۆدی کاڵا">
-            <button class="btn-green" style="margin-bottom:5px;" onclick="startScanner('add')">📷 سکانکردنی بارکۆد</button>
+            <input type="text" id="newBarcode" placeholder="بارکۆدی نوێ">
+            <button class="btn-green" onclick="startScanner('add')">📷 سکان</button>
             <input type="text" id="newName" placeholder="ناوی کاڵا">
-            <input type="number" id="newPrice" placeholder="نرخ بە دینار">
-            <input type="number" id="newStock" placeholder="بڕی کاڵا (دانە)">
-            <button class="btn-orange" onclick="saveNewProduct()">💾 پاشەکەوتکردن</button>
+            <input type="number" id="newPrice" placeholder="نرخ">
+            <input type="number" id="newStock" placeholder="بڕی کاڵا">
+            <button class="btn-orange" onclick="saveToCloud()">💾 پاشەکەوتکردن لە هەموو مۆبایلەکان</button>
         </div>
-
         <div id="reader"></div>
     </div>
 
-    <div class="footer">
-        Produced by Zana Adam © 2026
-    </div>
+    <div class="footer">Produced by Zana Adam © 2026</div>
 
     <script>
-        // دروستکردنی دەنگی Beep
-        const beepContext = new (window.AudioContext || window.webkitAudioContext)();
-        function playBeep() {
-            const osc = beepContext.createOscillator();
-            const gain = beepContext.createGain();
-            osc.connect(gain);
-            gain.connect(beepContext.destination);
-            osc.type = "sine";
-            osc.frequency.value = 800;
-            gain.gain.setValueAtTime(0.1, beepContext.currentTime);
-            osc.start();
-            osc.stop(beepContext.currentTime + 0.1);
-            
-            // لەرزین (Vibrate)
-            if (navigator.vibrate) navigator.vibrate(100);
-        }
+        // --- گرنگ: زانیارییەکانی خۆت لێرە دابنێ ---
+        const firebaseConfig = {
+            databaseURL: "لێرە لینکی فایەربەیسەکەت دابنێ" 
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-        let db = JSON.parse(localStorage.getItem('ahmad_phone_db')) || {};
+        let db = {};
         let cart = [];
 
-        function showSection(type) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.tab-buttons button').forEach(b => b.classList.remove('active'));
-            if(type === 'sell') {
-                document.getElementById('sellSection').classList.add('active');
-                document.getElementById('btnSell').classList.add('active');
-            } else {
-                document.getElementById('addSection').classList.add('active');
-                document.getElementById('btnAdd').classList.add('active');
-            }
-        }
+        // وەرگرتنی داتا لە کاتی ڕاستەقینەدا بۆ هەموو مۆبایلەکان
+        database.ref('products').on('value', (snapshot) => {
+            db = snapshot.val() || {};
+            console.log("Database Updated from Cloud");
+        });
 
-        function saveNewProduct() {
-            const barcode = document.getElementById('newBarcode').value.trim();
-            const name = document.getElementById('newName').value.trim();
-            const price = parseInt(document.getElementById('newPrice').value);
-            const stock = parseInt(document.getElementById('newStock').value);
+        function saveToCloud() {
+            const b = document.getElementById('newBarcode').value.trim();
+            const n = document.getElementById('newName').value.trim();
+            const p = parseInt(document.getElementById('newPrice').value);
+            const s = parseInt(document.getElementById('newStock').value);
 
-            if(barcode && name && price && !isNaN(stock)) {
-                db[barcode] = { name: name, price: price, stock: stock };
-                localStorage.setItem('ahmad_phone_db', JSON.stringify(db));
-                alert("تۆمار کرا!");
-                document.getElementById('newBarcode').value = "";
-                document.getElementById('newName').value = "";
-                document.getElementById('newPrice').value = "";
-                document.getElementById('newStock').value = "";
+            if(b && n && p && !isNaN(s)) {
+                database.ref('products/' + b).set({
+                    name: n, price: p, stock: s
+                }).then(() => {
+                    alert("تۆمار کرا و بۆ هەموو مۆبایلەکان نێردرا!");
+                    document.getElementById('addSection').querySelectorAll('input').forEach(i => i.value = "");
+                });
             }
         }
 
         function addToCart(barcode) {
             const b = barcode.trim();
             if (db[b]) {
-                if (db[b].stock <= 0) {
-                    alert("لە کۆگا نەماوە!");
-                    return;
-                }
+                if (db[b].stock <= 0) { alert("نەماوە!"); return; }
                 const existing = cart.find(i => i.barcode === b);
                 if (existing) {
-                    if (existing.qty < db[b].stock) {
-                        existing.qty += 1;
-                        playBeep();
-                    } else {
-                        alert("تەنها " + db[b].stock + " دانەت هەیە.");
-                    }
+                    if (existing.qty < db[b].stock) existing.qty += 1;
+                    else alert("تەنها " + db[b].stock + " دانەت هەیە.");
                 } else {
                     cart.push({ barcode: b, name: db[b].name, price: db[b].price, qty: 1 });
-                    playBeep();
                 }
-                updateCartUI();
-                document.getElementById('barcodeSell').value = "";
-            } else { alert("نەدۆزرایەوە!"); }
+                updateUI();
+            } else { alert("تۆمار نەکراوە!"); }
         }
 
-        function updateCartUI() {
+        function updateUI() {
             const list = document.getElementById('cartItems');
             list.innerHTML = "";
             let total = 0;
-            cart.forEach((item) => {
-                const itemTotal = item.price * item.qty;
-                const remaining = db[item.barcode].stock - item.qty;
-                total += itemTotal;
+            cart.forEach(item => {
+                total += (item.price * item.qty);
                 list.innerHTML += `<div class="cart-item">
-                    <div><b>${item.qty}x ${item.name}</b><span class="stock-info">ماوە: ${remaining}</span></div>
-                    <span>${itemTotal.toLocaleString()} IQD</span>
+                    <span>${item.qty}x ${item.name} <small>(ماوە: ${db[item.barcode].stock - item.qty})</small></span>
+                    <span>${(item.price * item.qty).toLocaleString()} IQD</span>
                 </div>`;
             });
             document.getElementById('totalPrice').innerText = total.toLocaleString() + " IQD";
-            const hasItems = cart.length > 0;
-            document.getElementById('waBtn').style.display = hasItems ? "block" : "none";
-            document.getElementById('clearBtn').style.display = hasItems ? "block" : "none";
+            document.getElementById('waBtn').style.display = cart.length > 0 ? "block" : "none";
+            document.getElementById('clearBtn').style.display = cart.length > 0 ? "block" : "none";
         }
 
-        function clearCart() { cart = []; updateCartUI(); }
-
         function sendToWhatsapp() {
-            const phone = "9647510074008";
             let itemsText = "";
             let total = 0;
             cart.forEach((item, index) => {
                 total += (item.price * item.qty);
-                db[item.barcode].stock -= item.qty;
-                itemsText += `${index + 1}- ${item.name} (بڕ: ${item.qty})%0A`;
+                // کەمکردنەوە لە کلاود
+                let newStock = db[item.barcode].stock - item.qty;
+                database.ref('products/' + item.barcode).update({ stock: newStock });
+                itemsText += `${index+1}- ${item.name} (${item.qty})%0A`;
             });
-            localStorage.setItem('ahmad_phone_db', JSON.stringify(db));
-            const message = `📋 *وەصڵی فرۆشتن - AHMAD PHONE*%0A--------------------------%0A${itemsText}--------------------------%0A💰 *کۆیی گشتی:* ${total.toLocaleString()} IQD%0A✍️ *بەرھەمھێنەر:* Zana Adam`;
-            window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-            cart = [];
-            updateCartUI();
+
+            const message = `📋 *وەصڵ - AHMAD PHONE*%0A------------------%0A${itemsText}------------------%0A💰 *کۆ: ${total.toLocaleString()} IQD*%0A✍️ Zana Adam`;
+            window.open(`https://wa.me/9647510074008?text=${message}`, '_blank');
+            cart = []; updateUI();
         }
 
+        function showSection(s) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.tab-buttons button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(s + 'Section').classList.add('active');
+            document.getElementById('btn' + s.charAt(0).toUpperCase() + s.slice(1)).classList.add('active');
+        }
+
+        function clearCart() { cart = []; updateUI(); }
+
         let html5QrCode;
-        function startScanner(mode) {
-            const readerDiv = document.getElementById('reader');
-            readerDiv.style.display = "block";
+        function startScanner(m) {
+            const r = document.getElementById('reader');
+            r.style.display = "block";
             html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 },
-                (decodedText) => {
-                    if(mode === 'sell') { addToCart(decodedText); } 
-                    else { document.getElementById('newBarcode').value = decodedText; playBeep(); }
-                    html5QrCode.stop();
-                    readerDiv.style.display = "none";
+                (text) => {
+                    if(m === 'sell') addToCart(text);
+                    else document.getElementById('newBarcode').value = text;
+                    html5QrCode.stop(); r.style.display = "none";
                 }
-            ).catch(() => { readerDiv.style.display = "none"; });
+            ).catch(() => r.style.display = "none");
         }
     </script>
 </body>
