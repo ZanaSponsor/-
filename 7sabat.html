@@ -6,29 +6,40 @@
     <title>AHMAD PHONE - POS & Database</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); box-sizing: border-box; flex-grow: 1; }
         .header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         h1 { color: #007bff; margin: 0; font-size: 24px; }
         
         .tab-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab-buttons button { flex: 1; padding: 10px; font-size: 14px; background: #eee; color: #333; }
+        .tab-buttons button { flex: 1; padding: 10px; font-size: 14px; background: #eee; color: #333; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; }
         .tab-buttons button.active { background: #007bff; color: white; }
 
         .section { display: none; }
         .section.active { display: block; }
 
         input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; text-align: center; font-size: 16px; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; font-size: 16px; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; font-size: 16px; transition: 0.2s; }
         
         .btn-blue { background-color: #007bff; color: white; }
         .btn-green { background-color: #28a745; color: white; }
         .btn-orange { background-color: #ff9800; color: white; }
         
-        #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; border: 1px solid #ddd; }
+        #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; border: 1px solid #ddd; margin-bottom: 10px; }
         .cart-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
         .total-box { margin-top: 15px; padding: 15px; background: #eef6ff; border-radius: 10px; text-align: center; font-size: 20px; font-weight: bold; color: #d9534f; }
         .whatsapp-btn { background-color: #25D366; color: white; margin-top: 10px; }
+
+        /* ستایلی مافی بەرهەمهێنان */
+        .footer {
+            margin-top: 30px;
+            padding: 15px;
+            font-size: 13px;
+            color: #777;
+            text-align: center;
+            width: 100%;
+            border-top: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
@@ -46,14 +57,14 @@
         <div id="sellSection" class="section active">
             <input type="text" id="barcodeSell" placeholder="بارکۆد سکان بکە یان بنووسە">
             <button class="btn-blue" onclick="addToCart(document.getElementById('barcodeSell').value)">➕ زیادکردن</button>
-            <button class="btn-green" onclick="startScanner('sell')">📷 سکانکردن</button>
+            <button class="btn-green" onclick="startScanner('sell')">📷 سکانکردنی بارکۆد</button>
             <div id="cartItems"></div>
             <div class="total-box" id="totalPrice">0 IQD</div>
-            <button class="whatsapp-btn" id="waBtn" style="display:none;" onclick="sendToWhatsapp()">✅ ناردنی وەصڵ</button>
+            <button class="whatsapp-btn" id="waBtn" style="display:none;" onclick="sendToWhatsapp()">✅ ناردنی وەصڵ بۆ واتسئاپ</button>
         </div>
 
         <div id="addSection" class="section">
-            <p style="font-size: 13px; color: #666;">لێرە بارکۆد و ناو و نرخ بنووسە بۆ ئەوەی خەزن بێت.</p>
+            <p style="font-size: 13px; color: #666; text-align: center;">لێرە بارکۆدی نوێ و نرخ زیاد بکە بۆ ناو مۆبایلەکەت.</p>
             <input type="text" id="newBarcode" placeholder="بارکۆدی کاڵا">
             <button class="btn-green" style="margin-bottom:5px;" onclick="startScanner('add')">📷 سکانکردنی بارکۆد</button>
             <input type="text" id="newName" placeholder="ناوی کاڵا">
@@ -64,14 +75,16 @@
         <div id="reader"></div>
     </div>
 
+    <div class="footer">
+        Produced by Zana Adam © 2026
+    </div>
+
     <script>
-        // لێرە کاڵا کۆنەکان و کاڵا نوێیەکان کۆدەبنەوە
+        // لودکردنی داتابەیس لە میمۆری مۆبایل
         let db = JSON.parse(localStorage.getItem('ahmad_phone_db')) || {
             "6926081469953": { name: "LK150S (TYPE_C/MICRO)", price: 3000 },
             "6975011272217": { name: "GERLAX L36T TYPE_C", price: 6000 },
-            "6975011272514": { name: "GERLAX GD-43 ALL", price: 6000 },
             "195949121319": { name: "USB-C 20W ADAPTER", price: 13000 }
-            // دەتوانیت ئەوانی تریش لێرە زیاد بکەیت یان بە دوگمەی "تۆمارکردن" زیادیان بکەیت
         };
 
         let cart = [];
@@ -96,12 +109,12 @@
             if(barcode && name && price) {
                 db[barcode] = { name: name, price: price };
                 localStorage.setItem('ahmad_phone_db', JSON.stringify(db));
-                alert("کاڵاکە بە سەرکەوتوویی تۆمار کرا!");
+                alert("کاڵای " + name + " بە سەرکەوتوویی تۆمار کرا!");
                 document.getElementById('newBarcode').value = "";
                 document.getElementById('newName').value = "";
                 document.getElementById('newPrice').value = "";
             } else {
-                alert("تکایە هەموو زانیارییەکان پڕ بکەرەوە");
+                alert("تکایە هەموو خانەکان پڕ بکەرەوە");
             }
         }
 
@@ -114,7 +127,7 @@
                 updateCartUI();
                 document.getElementById('barcodeSell').value = "";
             } else {
-                alert("ئەم بارکۆدە تۆمار نەکراوە! سەرەتا لە بەشی 'تۆمارکردن' زیادی بکە.");
+                alert("ئەم بارکۆدە نەدۆزرایەوە! سەرەتا تۆماری بکە.");
             }
         }
 
@@ -122,7 +135,7 @@
             const list = document.getElementById('cartItems');
             list.innerHTML = "";
             let total = 0;
-            cart.forEach((item, index) => {
+            cart.forEach((item) => {
                 const itemTotal = item.price * item.qty;
                 total += itemTotal;
                 list.innerHTML += `<div class="cart-item">
@@ -142,8 +155,10 @@
                 total += (item.price * item.qty);
                 itemsText += `${index + 1}- ${item.name} (بڕ: ${item.qty})%0A`;
             });
-            const message = `📋 *وەصڵی فرۆشتن - AHMAD PHONE*%0A--------------------------%0A${itemsText}--------------------------%0A💰 *کۆیی گشتی:* ${total.toLocaleString()} IQD`;
+            const message = `📋 *وەصڵی فرۆشتن - AHMAD PHONE*%0A--------------------------%0A${itemsText}--------------------------%0A💰 *کۆیی گشتی:* ${total.toLocaleString()} IQD%0A✍️ *بەرھەمھێنەر:* Zana Adam`;
             window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+            cart = []; // پاککردنەوەی سەبەتە دوای ناردن
+            updateCartUI();
         }
 
         let html5QrCode;
