@@ -35,58 +35,76 @@
         <div class="header"><h1>AHMAD PHONE</h1></div>
         <div class="tab-buttons">
             <button id="btnSell" class="active" onclick="showSection('sell')">🛒 فرۆشتن</button>
-            <button id="btnAdd" onclick="showSection('add')">📦 تۆمارکردنی کاڵا</button>
+            <button id="btnAdd" onclick="showSection('add')">📦 تۆمارکردن</button>
         </div>
 
         <div id="sellSection" class="section active">
             <input type="text" id="barcodeSell" placeholder="بارکۆد بنووسە">
-            <button class="btn-blue" onclick="addToCart(document.getElementById('barcodeSell').value)">➕ زیادکردن بۆ سەبەتە</button>
-            <button class="btn-green" onclick="startScanner('sell')">📷 سکانکردنی کاڵا</button>
+            <button class="btn-blue" onclick="addToCart(document.getElementById('barcodeSell').value)">➕ زیادکردن</button>
+            <button class="btn-green" onclick="startScanner('sell')">📷 سکانکردن</button>
             <div id="cartItems"></div>
             <div class="total-box" id="totalPrice">0 IQD</div>
-            <button class="btn-green" style="background:#25D366; color:white; width:100%; display:none;" id="waBtn" onclick="sendToWhatsapp()">✅ ناردنی وەصڵ بۆ واتسئاپ</button>
-            <button class="btn-red" id="clearBtn" style="display:none; width:100%;" onclick="clearCart()">🗑️ سڕینەوەی هەمووی</button>
+            <button class="btn-green" style="background:#25D366; color:white; width:100%; display:none;" id="waBtn" onclick="sendToWhatsapp()">✅ ناردنی وەصڵ</button>
+            <button class="btn-red" id="clearBtn" style="display:none; width:100%;" onclick="clearCart()">🗑️ سڕینەوە</button>
         </div>
 
         <div id="addSection" class="section">
             <input type="text" id="newBarcode" placeholder="بارکۆدی نوێ">
-            <button class="btn-green" onclick="startScanner('add')">📷 سکانکردنی بارکۆد</button>
+            <button class="btn-green" onclick="startScanner('add')">📷 سکان</button>
             <input type="text" id="newName" placeholder="ناوی کاڵا">
-            <input type="number" id="newPrice" placeholder="نرخی فرۆشتن">
-            <input type="number" id="newStock" placeholder="بڕی کاڵا لە کۆگا">
+            <input type="number" id="newPrice" placeholder="نرخ">
+            <input type="number" id="newStock" placeholder="بڕ">
             <button class="btn-orange" onclick="saveData()">💾 پاشەکەوتکردن</button>
         </div>
-
         <div id="reader"></div>
     </div>
 
     <div class="footer">Produced by Zana Adam © 2026</div>
 
     <script>
-        // --- گرنگ: لینکی فایەربەیس لێرە دابنێ بۆ ئەوەی لە هەموو مۆبایلەکان کار بکات ---
-        const firebaseConfig = {
-            databaseURL: "https://your-project-default-rtdb.firebaseio.com/" 
-        };
-        
-        // ئەگەر فایەربەیستان نەبوو، بەرنامەکە لەسەر میمۆری ناوخۆ کار دەکات
-        let database = null;
-        try {
-            firebase.initializeApp(firebaseConfig);
-            database = firebase.database();
-        } catch(e) { console.log("Firebase not connected."); }
+        const beepContext = new (window.AudioContext || window.webkitAudioContext)();
+        function playBeep() {
+            const osc = beepContext.createOscillator();
+            const gain = beepContext.createGain();
+            osc.connect(gain); gain.connect(beepContext.destination);
+            osc.frequency.value = 800; gain.gain.setValueAtTime(0.1, beepContext.currentTime);
+            osc.start(); osc.stop(beepContext.currentTime + 0.1);
+            if (navigator.vibrate) navigator.vibrate(100);
+        }
 
-        let db = JSON.parse(localStorage.getItem('pos_backup')) || {};
+        const firebaseConfig = { databaseURL: "https://your-project.firebaseio.com/" };
+        let database = null;
+        try { firebase.initializeApp(firebaseConfig); database = firebase.database(); } catch(e) {}
+
+        // لیستی بنەڕەتی کاڵاکان
+        const initialDB = {
+            "6926081469953": { name: "LK150S (TYPE_C/MICRO)", price: 3000, stock: 100 },
+            "6975011272217": { name: "GERLAX L36T TYPE_C", price: 6000, stock: 100 },
+            "6975011272514": { name: "GERLAX GD-43 ALL", price: 6000, stock: 100 },
+            "6975011278769": { name: "GERLAX D7L IPHONE", price: 5000, stock: 100 },
+            "6975011272859": { name: "GERLAX GD-52L IPHONE", price: 5000, stock: 100 },
+            "6975011276406": { name: "GERLAX L16 TYPE_C", price: 5000, stock: 100 },
+            "6975011278721": { name: "GERLAX D7T USB-TYPE_C", price: 3000, stock: 100 },
+            "6972573337538": { name: "WLIW X213 USB-TYPE_C", price: 5000, stock: 100 },
+            "6972573335077": { name: "WLIW T66 USB-MICRO", price: 5000, stock: 100 },
+            "6976504663871": { name: "FLATWIRE USB-IPHONE", price: 5000, stock: 100 },
+            "6941950218456": { name: "MX-CB307 TYPE-C-IPHONE", price: 7000, stock: 100 },
+            "6954176814968": { name: "AORAX 106 ADAPTER", price: 12000, stock: 100 },
+            "6978652148781": { name: "AORAX 886Plus T-T", price: 12000, stock: 100 },
+            "6977465962140": { name: "AORAX JS-02 PD+QC", price: 8000, stock: 100 },
+            "195949121319": { name: "USB-C 20W ADAPTER", price: 13000, stock: 100 },
+            "190198001733": { name: "EarPods Lightning", price: 13000, stock: 100 },
+            "190198496263": { name: "USB-C to Lightining", price: 5000, stock: 100 },
+            "194252156926": { name: "IPHONE 14PM 25W ADAPTER", price: 25000, stock: 100 },
+            "6761546315549": { name: "AORAX 656 SERIES", price: 6500, stock: 100 },
+            "8655106412015": { name: "VJP VI-530", price: 5000, stock: 100 }
+        };
+
+        let db = JSON.parse(localStorage.getItem('pos_db')) || initialDB;
         let cart = [];
 
-        // ئەگەر ئۆنلاین بیت، داتا لە کلاودەوە وەردەگرێت
         if (database) {
-            database.ref('products').on('value', (snapshot) => {
-                if (snapshot.exists()) {
-                    db = snapshot.val();
-                    localStorage.setItem('pos_backup', JSON.stringify(db));
-                    console.log("Data synced from Cloud.");
-                }
-            });
+            database.ref('products').on('value', (s) => { if(s.exists()){ db = s.val(); localStorage.setItem('pos_db', JSON.stringify(db)); }});
         }
 
         function saveData() {
@@ -94,45 +112,31 @@
             const n = document.getElementById('newName').value.trim();
             const p = parseInt(document.getElementById('newPrice').value);
             const s = parseInt(document.getElementById('newStock').value);
-
             if(b && n && p && !isNaN(s)) {
                 db[b] = { name: n, price: p, stock: s };
-                localStorage.setItem('pos_backup', JSON.stringify(db));
-                
-                if (database) {
-                    database.ref('products/' + b).set(db[b]);
-                }
-                
-                alert("بە سەرکەوتوویی پاشەکەوت کرا!");
-                document.getElementById('addSection').querySelectorAll('input').forEach(i => i.value = "");
-            } else { alert("تکایە هەموو زانیارییەکان پڕ بکەرەوە."); }
+                localStorage.setItem('pos_db', JSON.stringify(db));
+                if(database) database.ref('products/' + b).set(db[b]);
+                alert("تۆمار کرا!");
+            }
         }
 
         function addToCart(barcode) {
             const b = barcode.trim();
             if (db[b]) {
-                if (db[b].stock <= 0) { alert("لە کۆگا نەماوە!"); return; }
+                if(db[b].stock <= 0) { alert("نەماوە!"); return; }
                 const existing = cart.find(i => i.barcode === b);
-                if (existing) {
-                    if (existing.qty < db[b].stock) existing.qty += 1;
-                    else alert("تەنها " + db[b].stock + " دانەت هەیە.");
-                } else {
-                    cart.push({ barcode: b, name: db[b].name, price: db[b].price, qty: 1 });
-                }
-                updateUI();
-            } else { alert("ئەم بارکۆدە تۆمار نەکراوە!"); }
+                if (existing) existing.qty += 1;
+                else cart.push({ barcode: b, name: db[b].name, price: db[b].price, qty: 1 });
+                playBeep(); updateUI();
+            } else { alert("نەدۆزرایەوە!"); }
         }
 
         function updateUI() {
-            const list = document.getElementById('cartItems');
-            list.innerHTML = "";
+            const list = document.getElementById('cartItems'); list.innerHTML = "";
             let total = 0;
             cart.forEach(item => {
                 total += (item.price * item.qty);
-                list.innerHTML += `<div class="cart-item">
-                    <span>${item.qty}x ${item.name} <small>(ماوە: ${db[item.barcode].stock - item.qty})</small></span>
-                    <span>${(item.price * item.qty).toLocaleString()} IQD</span>
-                </div>`;
+                list.innerHTML += `<div class="cart-item"><span>${item.qty}x ${item.name}</span><span>${(item.price*item.qty).toLocaleString()} IQD</span></div>`;
             });
             document.getElementById('totalPrice').innerText = total.toLocaleString() + " IQD";
             document.getElementById('waBtn').style.display = cart.length > 0 ? "block" : "none";
@@ -140,42 +144,35 @@
         }
 
         function sendToWhatsapp() {
-            let itemsText = "";
-            let total = 0;
-            cart.forEach((item) => {
+            let txt = ""; let total = 0;
+            cart.forEach(item => {
                 total += (item.price * item.qty);
                 db[item.barcode].stock -= item.qty;
-                if (database) database.ref('products/' + item.barcode).update({ stock: db[item.barcode].stock });
-                itemsText += `- ${item.name} (${item.qty} دانە)%0A`;
+                if(database) database.ref('products/'+item.barcode).update({stock: db[item.barcode].stock});
+                txt += `- ${item.name} (${item.qty})%0A`;
             });
-            localStorage.setItem('pos_backup', JSON.stringify(db));
-
-            const message = `📋 *وەصڵ - AHMAD PHONE*%0A------------------%0A${itemsText}------------------%0A💰 *کۆ: ${total.toLocaleString()} IQD*%0A✍️ Zana Adam`;
-            window.open(`https://wa.me/9647510074008?text=${message}`, '_blank');
+            localStorage.setItem('pos_db', JSON.stringify(db));
+            window.open(`https://wa.me/9647510074008?text=📋 *وەصڵ*%0A${txt}💰 *کۆ: ${total.toLocaleString()}*`, '_blank');
             cart = []; updateUI();
         }
 
         function showSection(s) {
             document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-            document.querySelectorAll('.tab-buttons button').forEach(btn => btn.classList.remove('active'));
             document.getElementById(s + 'Section').classList.add('active');
-            document.getElementById('btn' + s.charAt(0).toUpperCase() + s.slice(1)).classList.add('active');
+            document.querySelectorAll('.tab-buttons button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
         }
 
         function clearCart() { cart = []; updateUI(); }
 
         let html5QrCode;
         function startScanner(m) {
-            const r = document.getElementById('reader');
-            r.style.display = "block";
+            const r = document.getElementById('reader'); r.style.display = "block";
             html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 },
-                (text) => {
-                    if(m === 'sell') addToCart(text);
-                    else document.getElementById('newBarcode').value = text;
-                    html5QrCode.stop(); r.style.display = "none";
-                }
-            ).catch(() => r.style.display = "none");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (text) => {
+                if(m === 'sell') addToCart(text); else document.getElementById('newBarcode').value = text;
+                html5QrCode.stop(); r.style.display = "none";
+            }).catch(() => r.style.display = "none");
         }
     </script>
 </body>
