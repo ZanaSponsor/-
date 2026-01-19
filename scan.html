@@ -3,80 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سیستەمی فرۆشتنی زانا - بەشی پارچەکان</title>
+    <title>سیستەمی فرۆشتنی زانا v2.0</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; padding: 15px; text-align: center; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        :root { --primary: #3182ce; --success: #2f855a; --danger: #e53e3e; --bg: #f7fafc; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); padding: 15px; text-align: center; color: #2d3748; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         
-        .section-title { background: #3182ce; color: white; padding: 10px; border-radius: 10px; margin: 20px 0 10px 0; }
-        .battery-title { background: #2f855a; }
+        /* بەشی گەڕان */
+        .search-box { display: flex; gap: 8px; margin-bottom: 25px; }
+        input { flex: 1; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px; outline: none; }
+        input:focus { border-color: var(--primary); }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 0 20px; border-radius: 12px; cursor: pointer; font-weight: bold; }
 
-        .search-area { display: flex; gap: 10px; margin-bottom: 20px; }
-        input { flex: 1; padding: 15px; border: 2px solid #ddd; border-radius: 12px; font-size: 16px; }
-        .btn-add { background: #4a5568; color: white; border: none; padding: 0 20px; border-radius: 12px; cursor: pointer; }
+        /* خشتەی سەبەتە */
+        .cart-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .cart-table th { background: #edf2f7; padding: 12px; text-align: right; font-size: 14px; }
+        .cart-table td { padding: 12px; border-bottom: 1px solid #edf2f7; text-align: right; }
+        .cart-table img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; background: #eee; }
 
-        .cart-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .cart-table th, .cart-table td { padding: 12px; border-bottom: 1px solid #eee; text-align: right; }
-        .cart-table img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; }
-
-        .total-box { font-size: 28px; color: #2d3748; font-weight: bold; margin-top: 25px; padding: 15px; background: #edf2f7; border-radius: 15px; border: 2px dashed #cbd5e0; }
-        .currency { color: #2f855a; font-size: 18px; }
+        /* کۆی گشتی و پارەدان */
+        .summary-card { margin-top: 25px; padding: 20px; background: #f0fff4; border-radius: 15px; border: 2px solid #c6f6d5; }
+        .total-price { font-size: 32px; color: var(--success); font-weight: bold; }
+        .payment-methods { display: flex; gap: 10px; margin-top: 15px; justify-content: center; display: none; }
+        .btn-pay { flex: 1; padding: 12px; border: none; border-radius: 10px; color: white; cursor: pointer; font-weight: bold; }
+        .zain { background: #ff0000; }
+        .fast { background: #e31e24; }
+        
+        #qr-result { margin-top: 15px; display: none; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>بەڕێوەبردنی فرۆشتنی زانا</h2>
-
-    <div class="search-area">
-        <input type="text" id="inputCode" placeholder="کۆدی شاشە یان پاتری بنووسە..." onkeypress="if(event.key==='Enter') addItem()">
-        <button class="btn-add" onclick="addItem()">+ زیادکردن</button>
+    <h2 style="margin-top: 0;">بەڕێوەبردنی فرۆشتن</h2>
+    
+    <div class="search-box">
+        <input type="text" id="inputCode" placeholder="کۆدی پارچە بنووسە (وەک S13 یان B12)..." onkeypress="if(event.key==='Enter') addItem()">
+        <button class="btn-add" onclick="addItem()">زیادکردن</button>
     </div>
 
     <table class="cart-table">
         <thead>
-            <tr style="background: #f8f9fa;">
+            <tr>
                 <th>وێنە</th>
-                <th>ناونیشانی پارچە</th>
+                <th>ناونیشان</th>
                 <th>نرخ</th>
-                <th>کردار</th>
+                <th>لادان</th>
             </tr>
         </thead>
-        <tbody id="cart-list">
-            </tbody>
+        <tbody id="cart-list"></tbody>
     </table>
 
-    <div class="total-box">
-        کۆی گشتی: <span id="total-amount">0</span> <span class="currency">$</span>
+    <div class="summary-card">
+        <div>کۆی گشتی پسووڵە:</div>
+        <div class="total-price"><span id="total-amount">0</span> <small style="font-size: 16px;">$</small></div>
+        
+        <button id="checkout-btn" onclick="showPayment()" style="width: 100%; margin-top: 15px; padding: 12px; background: var(--success); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">ئەنجامدانی پارەدان</button>
+        
+        <div id="payment-options" class="payment-methods">
+            <button class="btn-pay zain" onclick="generateQR('ZainCash')">ZainCash</button>
+            <button class="btn-pay fast" onclick="generateQR('FastPay')">FastPay</button>
+        </div>
+
+        <div id="qr-result">
+            <p id="qr-text" style="font-size: 14px; margin-bottom: 10px;"></p>
+            <img id="qr-img" src="" style="width: 180px; height: 180px; border: 5px solid white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        </div>
     </div>
-    
-    <button onclick="if(confirm('دڵنیای؟')) { cart=[]; updateUI(); }" style="margin-top:20px; color:red; background:none; border:none; cursor:pointer;">سڕینەوەی هەموو لیستەکە</button>
+
+    <button onclick="clearCart()" style="margin-top: 20px; background: none; border: none; color: #a0aec0; cursor: pointer; text-decoration: underline;">پاککردنەوەی هەمووی</button>
 </div>
 
 <script>
-    // لیستی داتا (بەشی شاشە و پاتری جیاکراوەتەوە)
-    const data = {
-        // بەشی شاشەکان (Screens)
-        "S13": { name: "شاشە iPhone 13 Pro", price: 160, img: "s13.jpg" },
-        "S14": { name: "شاشە iPhone 14 Max", price: 210, img: "s14.jpg" },
-        
-        // بەشی پاترییەکان (Batteries)
-        "B12": { name: "پاتری iPhone 12", price: 35, img: "b12.jpg" },
-        "B13": { name: "پاتری iPhone 13 Mini", price: 45, img: "b13.jpg" }
+    // داتای کاڵاکان
+    const inventory = {
+        "S13": { name: "شاشە iPhone 13 Pro", price: 165, img: "s13.jpg" },
+        "S14": { name: "شاشە iPhone 14 Pro Max", price: 210, img: "s14.jpg" },
+        "B12": { name: "پاتری iPhone 12 Mini", price: 35, img: "b12.jpg" },
+        "B13": { name: "پاتری iPhone 13", price: 45, img: "b13.jpg" }
     };
 
     let cart = [];
 
     function addItem() {
         const code = document.getElementById('inputCode').value.toUpperCase();
-        const item = data[code];
+        const item = inventory[code];
 
         if (item) {
             cart.push(item);
             updateUI();
             document.getElementById('inputCode').value = "";
+            resetPayment();
         } else {
-            alert("ئەم کۆدە بوونی نییە لە کۆگادا!");
+            alert("کۆدەکە هەڵەیە یان بوونی نییە!");
         }
     }
 
@@ -89,10 +109,10 @@
             total += item.price;
             list.innerHTML += `
                 <tr>
-                    <td><img src="${item.img}" onerror="this.src='https://via.placeholder.com/50?text=No+Img'"></td>
-                    <td style="font-weight:bold;">${item.name}</td>
-                    <td style="color:#2f855a;">${item.price} $</td>
-                    <td><button onclick="remove(${index})" style="color:red; border:none; background:none; cursor:pointer;">✖</button></td>
+                    <td><img src="${item.img}" onerror="this.src='https://via.placeholder.com/50?text=Part'"></td>
+                    <td style="font-weight:600;">${item.name}</td>
+                    <td style="color:var(--success); font-weight:bold;">${item.price} $</td>
+                    <td><button onclick="remove(${index})" style="color:var(--danger); border:none; background:none; cursor:pointer; font-size:18px;">✖</button></td>
                 </tr>`;
         });
         document.getElementById('total-amount').innerText = total;
@@ -101,6 +121,41 @@
     function remove(index) {
         cart.splice(index, 1);
         updateUI();
+        resetPayment();
+    }
+
+    function showPayment() {
+        if (cart.length === 0) return alert("سەبەتەکە خاڵییە!");
+        document.getElementById('payment-options').style.display = 'flex';
+        document.getElementById('checkout-btn').style.display = 'none';
+    }
+
+    function resetPayment() {
+        document.getElementById('payment-options').style.display = 'none';
+        document.getElementById('checkout-btn').style.display = 'block';
+        document.getElementById('qr-result').style.display = 'none';
+    }
+
+    function generateQR(type) {
+        const amount = document.getElementById('total-amount').innerText;
+        const walletNumber = "0750XXXXXXX"; // ژمارەی خۆت لێرە بنووسە
+        
+        const qrImg = document.getElementById('qr-img');
+        const qrResult = document.getElementById('qr-result');
+        const qrText = document.getElementById('qr-text');
+
+        // دروستکردنی QR Code ئۆتۆماتیکی
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${type}://transfer?number=${walletNumber}&amount=${amount}`;
+        qrText.innerText = `سکان بکە بۆ پارەدانی ${amount}$ لە ڕێگەی ${type}`;
+        qrResult.style.display = 'block';
+    }
+
+    function clearCart() {
+        if(confirm("دڵنیای لە سڕینەوەی پسووڵەکە؟")) {
+            cart = [];
+            updateUI();
+            resetPayment();
+        }
     }
 </script>
 
