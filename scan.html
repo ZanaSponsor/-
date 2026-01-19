@@ -35,7 +35,7 @@
     <p style="font-size: 14px; color: #718096; margin-bottom: 20px;">سیستەمی فرۆشتنی شاشە و پاتری</p>
 
     <div class="input-group">
-        <input type="text" id="custName" placeholder="ناوی کڕیار بنووسە (ناچاری)...">
+        <input type="text" id="custName" placeholder="ناوی کڕیار بنووسە (پێویستە)...">
         <div style="display: flex; gap: 5px;">
             <input type="text" id="partCode" placeholder="کۆدی پارچە..." style="flex:1;">
             <button class="btn-add" onclick="addItem()">+ زیادکردن</button>
@@ -54,7 +54,7 @@
 
     <div id="payment-box" class="payment-section">
         <h4 style="color:var(--fastpay); margin:0;">Zana Adam - FastPay</h4>
-        <img src="fastpay_qr.png" class="qr-img" alt="FastPay QR">
+        <img src="1768783291653.png" class="qr-img" alt="FastPay QR">
         
         <div class="upload-area">
             <p style="margin:0; font-size:14px;">سکرین‌شۆتی ناردنی پارەکە لێرە دابنێ:</p>
@@ -124,7 +124,7 @@
         html2pdf().set(opt).from(element).save();
 
         // ٢. ئامادەکردنی نامەی واتسئاپ
-        const myNumber = "964750XXXXXXX"; // ژمارەی خۆت لێرە بنووسە
+        const myNumber = "9647758887488"; // ژمارەی خۆت لێرە بنووسە
         const buyer = document.getElementById('custName').value;
         let msg = `*سڵاو کاک زانا، من ${buyer} پارەم ناردووە*%0A`;
         msg += `*کۆی گشتی: ${document.getElementById('total-amount').innerText}$*%0A%0A`;
