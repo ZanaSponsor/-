@@ -64,8 +64,8 @@
             <button class="btn-green" style="margin-bottom:5px;" onclick="startScanner('add')">📷 سکانکردنی بارکۆد</button>
             <input type="text" id="newName" placeholder="ناوی کاڵا">
             <input type="number" id="newPrice" placeholder="نرخ بە دینار">
-            <input type="number" id="newStock" placeholder="بڕی ماوە (چەند دانەت هەیە؟)">
-            <button class="btn-orange" onclick="saveNewProduct()">💾 پاشەکەوتکردن لە کۆگا</button>
+            <input type="number" id="newStock" placeholder="بڕی کاڵا (دانە)">
+            <button class="btn-orange" onclick="saveNewProduct()">💾 پاشەکەوتکردن</button>
         </div>
 
         <div id="reader"></div>
@@ -76,6 +76,23 @@
     </div>
 
     <script>
+        // دروستکردنی دەنگی Beep
+        const beepContext = new (window.AudioContext || window.webkitAudioContext)();
+        function playBeep() {
+            const osc = beepContext.createOscillator();
+            const gain = beepContext.createGain();
+            osc.connect(gain);
+            gain.connect(beepContext.destination);
+            osc.type = "sine";
+            osc.frequency.value = 800;
+            gain.gain.setValueAtTime(0.1, beepContext.currentTime);
+            osc.start();
+            osc.stop(beepContext.currentTime + 0.1);
+            
+            // لەرزین (Vibrate)
+            if (navigator.vibrate) navigator.vibrate(100);
+        }
+
         let db = JSON.parse(localStorage.getItem('ahmad_phone_db')) || {};
         let cart = [];
 
@@ -100,35 +117,36 @@
             if(barcode && name && price && !isNaN(stock)) {
                 db[barcode] = { name: name, price: price, stock: stock };
                 localStorage.setItem('ahmad_phone_db', JSON.stringify(db));
-                alert("کاڵای " + name + " تۆمار کرا بە بڕی " + stock + " دانە.");
+                alert("تۆمار کرا!");
                 document.getElementById('newBarcode').value = "";
                 document.getElementById('newName').value = "";
                 document.getElementById('newPrice').value = "";
                 document.getElementById('newStock').value = "";
-            } else { alert("تکایە هەموو خانەکان پڕ بکەرەوە"); }
+            }
         }
 
         function addToCart(barcode) {
             const b = barcode.trim();
             if (db[b]) {
                 if (db[b].stock <= 0) {
-                    alert("ئەم کاڵایە لە کۆگا نەماوە! (0 دانە)");
+                    alert("لە کۆگا نەماوە!");
                     return;
                 }
                 const existing = cart.find(i => i.barcode === b);
                 if (existing) {
                     if (existing.qty < db[b].stock) {
                         existing.qty += 1;
+                        playBeep();
                     } else {
-                        alert("ناتوانیت لەوە زیاتر بفرۆشیت، تەنها " + db[b].stock + " دانەت هەیە.");
-                        return;
+                        alert("تەنها " + db[b].stock + " دانەت هەیە.");
                     }
                 } else {
                     cart.push({ barcode: b, name: db[b].name, price: db[b].price, qty: 1 });
+                    playBeep();
                 }
                 updateCartUI();
                 document.getElementById('barcodeSell').value = "";
-            } else { alert("کاڵاکە لە کۆگا نییە!"); }
+            } else { alert("نەدۆزرایەوە!"); }
         }
 
         function updateCartUI() {
@@ -137,45 +155,33 @@
             let total = 0;
             cart.forEach((item) => {
                 const itemTotal = item.price * item.qty;
-                const remainingInStock = db[item.barcode].stock - item.qty;
+                const remaining = db[item.barcode].stock - item.qty;
                 total += itemTotal;
                 list.innerHTML += `<div class="cart-item">
-                    <div>
-                        <b>${item.qty}x ${item.name}</b>
-                        <span class="stock-info">لە کۆگا دەمێنێتەوە: ${remainingInStock} دانە</span>
-                    </div>
+                    <div><b>${item.qty}x ${item.name}</b><span class="stock-info">ماوە: ${remaining}</span></div>
                     <span>${itemTotal.toLocaleString()} IQD</span>
                 </div>`;
             });
             document.getElementById('totalPrice').innerText = total.toLocaleString() + " IQD";
-            const show = cart.length > 0;
-            document.getElementById('waBtn').style.display = show ? "block" : "none";
-            document.getElementById('clearBtn').style.display = show ? "block" : "none";
+            const hasItems = cart.length > 0;
+            document.getElementById('waBtn').style.display = hasItems ? "block" : "none";
+            document.getElementById('clearBtn').style.display = hasItems ? "block" : "none";
         }
 
-        function clearCart() {
-            cart = [];
-            updateCartUI();
-        }
+        function clearCart() { cart = []; updateCartUI(); }
 
         function sendToWhatsapp() {
             const phone = "9647510074008";
             let itemsText = "";
             let total = 0;
-            
             cart.forEach((item, index) => {
                 total += (item.price * item.qty);
-                // کەمکردنەوە لە کۆگای سەرەکی
                 db[item.barcode].stock -= item.qty;
                 itemsText += `${index + 1}- ${item.name} (بڕ: ${item.qty})%0A`;
             });
-
-            // نوێکردنەوەی داتابەیس دوای فرۆشتن
             localStorage.setItem('ahmad_phone_db', JSON.stringify(db));
-
             const message = `📋 *وەصڵی فرۆشتن - AHMAD PHONE*%0A--------------------------%0A${itemsText}--------------------------%0A💰 *کۆیی گشتی:* ${total.toLocaleString()} IQD%0A✍️ *بەرھەمھێنەر:* Zana Adam`;
             window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-            
             cart = [];
             updateCartUI();
         }
@@ -188,7 +194,7 @@
             html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 },
                 (decodedText) => {
                     if(mode === 'sell') { addToCart(decodedText); } 
-                    else { document.getElementById('newBarcode').value = decodedText; }
+                    else { document.getElementById('newBarcode').value = decodedText; playBeep(); }
                     html5QrCode.stop();
                     readerDiv.style.display = "none";
                 }
