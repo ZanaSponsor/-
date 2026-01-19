@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AHMAD PHONE - POS & Database</title>
+    <title>AHMAD PHONE - POS & Inventory</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
@@ -24,10 +24,11 @@
         .btn-blue { background-color: #007bff; color: white; }
         .btn-green { background-color: #28a745; color: white; }
         .btn-orange { background-color: #ff9800; color: white; }
-        .btn-red { background-color: #d9534f; color: white; margin-top: 5px; font-size: 14px; }
+        .btn-red { background-color: #d9534f; color: white; margin-top: 5px; }
         
         #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; border: 1px solid #ddd; margin-bottom: 10px; }
         .cart-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f9f9f9; font-size: 14px; align-items: center; }
+        .stock-info { font-size: 12px; color: #ff9800; display: block; }
         .total-box { margin-top: 15px; padding: 15px; background: #eef6ff; border-radius: 10px; text-align: center; font-size: 20px; font-weight: bold; color: #d9534f; }
         .whatsapp-btn { background-color: #25D366; color: white; margin-top: 10px; }
 
@@ -43,19 +44,19 @@
 
         <div class="tab-buttons">
             <button id="btnSell" class="active" onclick="showSection('sell')">🛒 فرۆشتن</button>
-            <button id="btnAdd" onclick="showSection('add')">📦 تۆمارکردنی کاڵا</button>
+            <button id="btnAdd" onclick="showSection('add')">📦 کۆگا & تۆمارکردن</button>
         </div>
 
         <div id="sellSection" class="section active">
-            <input type="text" id="barcodeSell" placeholder="بارکۆد سکان بکە یان بنووسە">
-            <button class="btn-blue" onclick="addToCart(document.getElementById('barcodeSell').value)">➕ زیادکردن</button>
-            <button class="btn-green" onclick="startScanner('sell')">📷 سکانکردنی بارکۆد</button>
+            <input type="text" id="barcodeSell" placeholder="بارکۆد بنووسە">
+            <button class="btn-blue" onclick="addToCart(document.getElementById('barcodeSell').value)">➕ فرۆشتن</button>
+            <button class="btn-green" onclick="startScanner('sell')">📷 سکانکردن</button>
             
             <div id="cartItems"></div>
             <div class="total-box" id="totalPrice">0 IQD</div>
             
-            <button class="whatsapp-btn" id="waBtn" style="display:none;" onclick="sendToWhatsapp()">✅ ناردنی وەصڵ بۆ واتسئاپ</button>
-            <button class="btn-red" id="clearBtn" style="display:none;" onclick="clearCart()">🗑️ سڕینەوەی سەبەتە</button>
+            <button class="whatsapp-btn" id="waBtn" style="display:none;" onclick="sendToWhatsapp()">✅ تەواوکردن و ناردن</button>
+            <button class="btn-red" id="clearBtn" style="display:none;" onclick="clearCart()">🗑️ پاشگەزبونەوە</button>
         </div>
 
         <div id="addSection" class="section">
@@ -63,7 +64,8 @@
             <button class="btn-green" style="margin-bottom:5px;" onclick="startScanner('add')">📷 سکانکردنی بارکۆد</button>
             <input type="text" id="newName" placeholder="ناوی کاڵا">
             <input type="number" id="newPrice" placeholder="نرخ بە دینار">
-            <button class="btn-orange" onclick="saveNewProduct()">💾 پاشەکەوتکردنی کاڵا</button>
+            <input type="number" id="newStock" placeholder="بڕی ماوە (چەند دانەت هەیە؟)">
+            <button class="btn-orange" onclick="saveNewProduct()">💾 پاشەکەوتکردن لە کۆگا</button>
         </div>
 
         <div id="reader"></div>
@@ -74,12 +76,7 @@
     </div>
 
     <script>
-        let db = JSON.parse(localStorage.getItem('ahmad_phone_db')) || {
-            "6926081469953": { name: "LK150S (TYPE_C/MICRO)", price: 3000 },
-            "6975011272217": { name: "GERLAX L36T TYPE_C", price: 6000 },
-            "195949121319": { name: "USB-C 20W ADAPTER", price: 13000 }
-        };
-
+        let db = JSON.parse(localStorage.getItem('ahmad_phone_db')) || {};
         let cart = [];
 
         function showSection(type) {
@@ -98,32 +95,40 @@
             const barcode = document.getElementById('newBarcode').value.trim();
             const name = document.getElementById('newName').value.trim();
             const price = parseInt(document.getElementById('newPrice').value);
-            if(barcode && name && price) {
-                db[barcode] = { name: name, price: price };
+            const stock = parseInt(document.getElementById('newStock').value);
+
+            if(barcode && name && price && !isNaN(stock)) {
+                db[barcode] = { name: name, price: price, stock: stock };
                 localStorage.setItem('ahmad_phone_db', JSON.stringify(db));
-                alert("کاڵای " + name + " تۆمار کرا!");
+                alert("کاڵای " + name + " تۆمار کرا بە بڕی " + stock + " دانە.");
                 document.getElementById('newBarcode').value = "";
                 document.getElementById('newName').value = "";
                 document.getElementById('newPrice').value = "";
-            } else { alert("خانەکان پڕ بکەرەوە"); }
+                document.getElementById('newStock').value = "";
+            } else { alert("تکایە هەموو خانەکان پڕ بکەرەوە"); }
         }
 
         function addToCart(barcode) {
             const b = barcode.trim();
             if (db[b]) {
+                if (db[b].stock <= 0) {
+                    alert("ئەم کاڵایە لە کۆگا نەماوە! (0 دانە)");
+                    return;
+                }
                 const existing = cart.find(i => i.barcode === b);
-                if (existing) { existing.qty += 1; } 
-                else { cart.push({ barcode: b, name: db[b].name, price: db[b].price, qty: 1 }); }
+                if (existing) {
+                    if (existing.qty < db[b].stock) {
+                        existing.qty += 1;
+                    } else {
+                        alert("ناتوانیت لەوە زیاتر بفرۆشیت، تەنها " + db[b].stock + " دانەت هەیە.");
+                        return;
+                    }
+                } else {
+                    cart.push({ barcode: b, name: db[b].name, price: db[b].price, qty: 1 });
+                }
                 updateCartUI();
                 document.getElementById('barcodeSell').value = "";
-            } else { alert("بارکۆدەکە نەدۆزرایەوە!"); }
-        }
-
-        function clearCart() {
-            if(confirm("ئایا دڵنیایت لە سڕینەوەی هەموو سەبەتەکە؟")) {
-                cart = [];
-                updateCartUI();
-            }
+            } else { alert("کاڵاکە لە کۆگا نییە!"); }
         }
 
         function updateCartUI() {
@@ -132,9 +137,13 @@
             let total = 0;
             cart.forEach((item) => {
                 const itemTotal = item.price * item.qty;
+                const remainingInStock = db[item.barcode].stock - item.qty;
                 total += itemTotal;
                 list.innerHTML += `<div class="cart-item">
-                    <span>${item.qty}x ${item.name}</span>
+                    <div>
+                        <b>${item.qty}x ${item.name}</b>
+                        <span class="stock-info">لە کۆگا دەمێنێتەوە: ${remainingInStock} دانە</span>
+                    </div>
                     <span>${itemTotal.toLocaleString()} IQD</span>
                 </div>`;
             });
@@ -144,16 +153,31 @@
             document.getElementById('clearBtn').style.display = show ? "block" : "none";
         }
 
+        function clearCart() {
+            cart = [];
+            updateCartUI();
+        }
+
         function sendToWhatsapp() {
             const phone = "9647510074008";
             let itemsText = "";
             let total = 0;
+            
             cart.forEach((item, index) => {
                 total += (item.price * item.qty);
+                // کەمکردنەوە لە کۆگای سەرەکی
+                db[item.barcode].stock -= item.qty;
                 itemsText += `${index + 1}- ${item.name} (بڕ: ${item.qty})%0A`;
             });
+
+            // نوێکردنەوەی داتابەیس دوای فرۆشتن
+            localStorage.setItem('ahmad_phone_db', JSON.stringify(db));
+
             const message = `📋 *وەصڵی فرۆشتن - AHMAD PHONE*%0A--------------------------%0A${itemsText}--------------------------%0A💰 *کۆیی گشتی:* ${total.toLocaleString()} IQD%0A✍️ *بەرھەمھێنەر:* Zana Adam`;
             window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+            
+            cart = [];
+            updateCartUI();
         }
 
         let html5QrCode;
