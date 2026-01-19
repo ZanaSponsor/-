@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AHMAD PHONE - POS</title>
+    <title>AHMAD PHONE - POS Plus</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
@@ -11,23 +11,27 @@
         .header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         h1 { color: #007bff; margin: 0; font-size: 24px; }
         
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 10px; box-sizing: border-box; text-align: center; font-size: 16px; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; font-size: 16px; transition: 0.2s; }
+        .section-title { font-size: 14px; color: #666; font-weight: bold; margin-top: 10px; display: block; text-align: right; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; text-align: center; font-size: 16px; transition: 0.3s; }
+        input:focus { border-color: #007bff; outline: none; }
+        
+        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; font-size: 16px; }
         
         .add-btn { background-color: #007bff; color: white; }
         .scan-btn { background-color: #28a745; color: white; }
+        .manual-btn { background-color: #ff9800; color: white; margin-top: 5px; }
         
         #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; margin-bottom: 10px; border: 1px solid #ddd; }
 
         .cart-section { margin-top: 20px; border-top: 2px dashed #ccc; padding-top: 10px; }
         .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
-        .remove-item { color: #d9534f; cursor: pointer; font-weight: bold; padding: 0 10px; }
+        .remove-item { color: #d9534f; cursor: pointer; font-weight: bold; padding: 5px; border: 1px solid #f2dede; border-radius: 5px; }
         
         .total-box { margin-top: 15px; padding: 15px; background: #eef6ff; border-radius: 10px; text-align: center; }
         .total-price { font-size: 24px; color: #d9534f; font-weight: bold; }
 
         .whatsapp-btn { background-color: #25D366; color: white; margin-top: 15px; display: none; }
-        .clear-btn { background-color: #6c757d; color: white; font-size: 12px; padding: 5px 15px; width: auto; }
+        .manual-section { background: #fffcf5; padding: 10px; border-radius: 12px; border: 1px solid #ffeeba; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -35,19 +39,27 @@
     <div class="container">
         <div class="header">
             <h1>AHMAD PHONE</h1>
-            <p>سیستەمی سکان و حساباتی فرۆشتن</p>
+            <p>سیستەمی سکان و حسابات</p>
         </div>
 
-        <input type="text" id="barcodeInput" placeholder="بارکۆد بنووسە یان سکان بکە">
-        <button class="add-btn" onclick="addToCart(document.getElementById('barcodeInput').value)">➕ زیادکردنی کاڵا</button>
+        <span class="section-title">📦 کاڵای تۆمارکراو (بارکۆد)</span>
+        <input type="text" id="barcodeInput" placeholder="بارکۆد بنووسە">
+        <button class="add-btn" onclick="addToCart(document.getElementById('barcodeInput').value)">➕ زیادکردنی بارکۆد</button>
         <button class="scan-btn" onclick="startScanner()">📷 سکانکردن (Scan)</button>
         
         <div id="reader"></div>
 
+        <div class="manual-section">
+            <span class="section-title">➕ زیادکردنی کاڵای تر (دەستی)</span>
+            <input type="text" id="manualName" placeholder="ناوی کاڵا (بۆ نمونە: کەڤەر)">
+            <input type="number" id="manualPrice" placeholder="نرخ بە دینار (بۆ نمونە: 5000)">
+            <button class="manual-btn" onclick="addManualToCart()">زیادکردنی کاڵای دەرەکی</button>
+        </div>
+
         <div class="cart-section">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h3>لیستی فرۆشتن</h3>
-                <button class="clear-btn" onclick="clearCart()">سڕینەوەی هەمووی</button>
+                <button style="width: auto; padding: 5px 10px; background: #6c757d; color: white; font-size: 12px;" onclick="clearCart()">پاککردنەوە</button>
             </div>
             <div id="cartItems"></div>
             
@@ -61,7 +73,7 @@
     </div>
 
     <script>
-        let cart = {}; // لێرە کاڵاکان بەپێی بارکۆد پاشەکەوت دەبن بۆ حسابکردنی بڕ
+        let cart = []; // بەکارهێنانی ئارای بۆ ئەوەی ڕێگەی دەستی ئاسانتر بێت
         const products = {
             "6926081469953": { name: "LK150S (TYPE_C/MICRO)", price: 3000 },
             "6975011272217": { name: "GERLAX L36T TYPE_C", price: 6000 },
@@ -106,20 +118,27 @@
         function addToCart(barcode) {
             const b = barcode.trim();
             if (products[b]) {
-                if (cart[b]) {
-                    cart[b].qty += 1;
-                } else {
-                    cart[b] = { ...products[b], qty: 1 };
-                }
+                const existing = cart.find(i => i.barcode === b);
+                if (existing) { existing.qty += 1; } 
+                else { cart.push({ barcode: b, name: products[b].name, price: products[b].price, qty: 1 }); }
                 updateCartUI();
                 document.getElementById('barcodeInput').value = "";
-            } else {
-                alert("ئەم بارکۆدە نەدۆزرایەوە!");
-            }
+            } else { alert("بارکۆد نەدۆزرایەوە!"); }
         }
 
-        function removeFromCart(barcode) {
-            delete cart[barcode];
+        function addManualToCart() {
+            const name = document.getElementById('manualName').value;
+            const price = parseInt(document.getElementById('manualPrice').value);
+            if (name && price) {
+                cart.push({ barcode: 'manual', name: name, price: price, qty: 1 });
+                updateCartUI();
+                document.getElementById('manualName').value = "";
+                document.getElementById('manualPrice').value = "";
+            } else { alert("ناوی کاڵا و نرخ بنووسە!"); }
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
             updateCartUI();
         }
 
@@ -128,35 +147,30 @@
             list.innerHTML = "";
             let total = 0;
             
-            Object.keys(cart).forEach(barcode => {
-                const item = cart[barcode];
+            cart.forEach((item, index) => {
                 const itemTotal = item.price * item.qty;
                 total += itemTotal;
                 list.innerHTML += `<div class="cart-item">
-                    <span><b>(${item.qty} دانە)</b> ${item.name}</span>
-                    <span>${itemTotal.toLocaleString()} IQD <span class="remove-item" onclick="removeFromCart('${barcode}')">X</span></span>
+                    <span><b>(${item.qty}x)</b> ${item.name}</span>
+                    <span>${itemTotal.toLocaleString()} IQD <span class="remove-item" onclick="removeFromCart(${index})">X</span></span>
                 </div>`;
             });
 
             document.getElementById('totalPrice').innerText = total.toLocaleString() + " IQD";
-            document.getElementById('waBtn').style.display = Object.keys(cart).length > 0 ? "block" : "none";
+            document.getElementById('waBtn').style.display = cart.length > 0 ? "block" : "none";
         }
 
-        function clearCart() {
-            cart = {};
-            updateCartUI();
-        }
+        function clearCart() { cart = []; updateCartUI(); }
 
         function sendToWhatsapp() {
             const phone = "9647510074008";
             let total = 0;
             let itemsText = "";
             
-            Object.keys(cart).forEach((barcode, index) => {
-                const item = cart[barcode];
+            cart.forEach((item, index) => {
                 const itemTotal = item.price * item.qty;
                 total += itemTotal;
-                itemsText += `${index + 1}- ${item.name}%0A    بڕ: ${item.qty} دانە%0A    نرخ: ${itemTotal.toLocaleString()} IQD%0A`;
+                itemsText += `${index + 1}- ${item.name}%0A    بڕ: ${item.qty}%0A    نرخ: ${itemTotal.toLocaleString()} IQD%0A`;
             });
 
             const message = `📋 *وەصڵی فرۆشتن - AHMAD PHONE*%0A--------------------------%0A${itemsText}--------------------------%0A💰 *کۆیی گشتی:* ${total.toLocaleString()} IQD%0A⏰ *کات:* ${new Date().toLocaleString('ku-IQ')}`;
