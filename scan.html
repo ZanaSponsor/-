@@ -6,58 +6,77 @@
     <title>سکانەری زیرەکی زانا</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; text-align: center; padding: 20px; }
-        #reader { width: 100%; max-width: 400px; margin: auto; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .result-box { 
-            margin-top: 25px; background: white; padding: 20px; border-radius: 20px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none; max-width: 400px; margin-left: auto; margin-right: auto;
-        }
-        .product-img { width: 150px; height: 150px; object-fit: contain; margin-bottom: 15px; border-radius: 10px; }
-        .price-tag { font-size: 28px; color: #25D366; font-weight: bold; margin: 10px 0; }
-        .item-name { font-size: 22px; color: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; text-align: center; padding: 20px; }
+        .container { max-width: 450px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; margin-bottom: 20px; }
+        .input-group { margin-bottom: 20px; display: flex; gap: 5px; }
+        input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; text-align: center; }
+        button { padding: 12px 20px; background: #28a745; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        .result-box { margin-top: 20px; padding: 15px; border: 2px solid #28a745; border-radius: 15px; display: none; }
+        .product-img { width: 150px; height: 150px; object-fit: contain; margin-bottom: 10px; }
+        .price { font-size: 30px; color: #28a745; font-weight: bold; }
     </style>
 </head>
 <body>
-    <h2 style="color: #333;">سکانەری نرخی کاڵاکان دروست کراوە لەلایەن Zana</h2>
+
+<div class="container">
+    <h2>سیستەمی سکان و گەڕان</h2>
+    
+    <div class="input-group">
+        <input type="text" id="manualCode" placeholder="بارکۆدەکە لێرە بنووسە...">
+        <button onclick="checkManual()">بگەڕێ</button>
+    </div>
+
     <div id="reader"></div>
 
     <div id="result" class="result-box">
         <img id="item-img" src="" class="product-img">
-        <div id="item-name" class="item-name"></div>
-        <div id="item-price" class="price-tag"></div>
+        <h3 id="item-name"></h3>
+        <div id="item-price" class="price"></div>
     </div>
+</div>
 
-    <script>
-        // لێرە لیستەکە بە وێنەوە زیاد بکە
-        const products = {
-        const products = {
-    "بارکۆدی_کاڵاکە": { 
-        name: "هێرمان White Oats", 
-        price: "10,000 دینار", 
-        img: "herman.jpg" // ناوی ئەو فایلەی ئاپلۆدت کرد
-    }
-};
+<script>
+    // لیستی کاڵاکان
+    const products = {
+        "869050648123": { name: "هێرمان White Oats", price: "10,000 د.ک", img: "herman.jpg" },
+        "123456": { name: "شامپۆ", price: "5,000 د.ک", img: "shampoo.jpg" }
+    };
 
-        function onScanSuccess(decodedText) {
-            const resultDiv = document.getElementById('result');
-            const product = products[decodedText];
-
-            if (product) {
-                document.getElementById('item-name').innerText = product.name;
-                document.getElementById('item-price').innerText = product.price;
-                document.getElementById('item-img').src = product.img;
-                document.getElementById('item-img').style.display = 'block';
-                resultDiv.style.display = 'block';
-            } else {
-                document.getElementById('item-name').innerText = "کۆدەکە نەدۆزرایەوە: " + decodedText;
-                document.getElementById('item-price').innerText = "تکایە لە لیستی نرخەکان زیادی بکە";
-                document.getElementById('item-img').style.display = 'none';
-                resultDiv.style.display = 'block';
-            }
+    function showProduct(code) {
+        const product = products[code];
+        const resultDiv = document.getElementById('result');
+        
+        if (product) {
+            document.getElementById('item-name').innerText = product.name;
+            document.getElementById('item-price').innerText = product.price;
+            document.getElementById('item-img').src = product.img;
+            document.getElementById('item-img').style.display = 'block';
+            resultDiv.style.display = 'block';
+            resultDiv.style.borderColor = '#28a745';
+        } else {
+            document.getElementById('item-name').innerText = "نەدۆزرایەوە: " + code;
+            document.getElementById('item-price').innerText = "ئەم کاڵایە لە لیستەکە نییە";
+            document.getElementById('item-img').style.display = 'none';
+            resultDiv.style.display = 'block';
+            resultDiv.style.borderColor = 'red';
         }
+    }
 
-        let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
-        html5QrcodeScanner.render(onScanSuccess);
-    </script>
+    // گەڕان بە دەست
+    function checkManual() {
+        const code = document.getElementById('manualCode').value;
+        if(code) showProduct(code);
+    }
+
+    // سکان بە کامێرا
+    function onScanSuccess(decodedText) {
+        showProduct(decodedText);
+    }
+
+    let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+    html5QrcodeScanner.render(onScanSuccess);
+</script>
+
 </body>
 </html>
