@@ -3,36 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zana Store - Admin Control</title>
+    <title>Zana Store - Pro System</title>
     <link href="https://fonts.cdnfonts.com/css/rabar" rel="stylesheet">
     <style>
         :root { --p: #1e3a8a; --s: #22c55e; --fastpay: #e31e24; --fib: #000; --bg: #f8fafc; --admin: #7c3aed; --reject: #dc2626; }
         body { font-family: 'Rabar', sans-serif; background: var(--bg); margin: 0; }
         .container { max-width: 1100px; margin: auto; padding: 20px; }
         .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        
-        input, select { width: 100%; padding: 14px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; font-family: 'Rabar'; font-size: 16px; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; cursor: pointer; font-family: 'Rabar'; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        input, select { width: 100%; padding: 14px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; font-family: 'Rabar'; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; cursor: pointer; font-family: 'Rabar'; font-weight: bold; font-size: 16px; }
         .btn-p { background: var(--p); color: white; }
         .btn-s { background: var(--s); color: white; }
-        .btn-admin { background: var(--admin); color: white; padding: 8px 12px; font-size: 13px; margin: 2px; border: none; border-radius: 8px; cursor: pointer; }
-        .btn-reject { background: var(--reject); color: white; padding: 8px 12px; font-size: 13px; margin: 2px; border: none; border-radius: 8px; cursor: pointer; }
-
+        .btn-admin { background: var(--admin); color: white; padding: 8px 12px; font-size: 13px; border-radius: 8px; border:none; cursor:pointer; }
+        .btn-reject { background: var(--reject); color: white; padding: 8px 12px; font-size: 13px; border-radius: 8px; border:none; cursor:pointer; }
         #main-store, #admin-panel { display: none; grid-template-columns: 1fr 380px; gap: 20px; }
         .header { grid-column: 1/-1; display: flex; justify-content: space-between; align-items: center; background: var(--p); color: white; padding: 15px 25px; border-radius: 15px; }
-        
         .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
-        .product-item { border: 2px solid #f1f5f9; padding: 20px; border-radius: 18px; text-align: center; cursor: pointer; }
-        
+        .product-item { border: 2px solid #f1f5f9; padding: 20px; border-radius: 18px; text-align: center; cursor: pointer; position: relative; }
+        .product-item b { display: block; color: var(--fastpay); margin-top: 5px; }
         .history-item { border-bottom: 1px solid #eee; padding: 15px 0; display: flex; justify-content: space-between; align-items: center; }
         .status-badge { padding: 4px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; }
         .pending { background: #fef3c7; color: #92400e; }
         .completed { background: #dcfce7; color: #166534; }
         .rejected { background: #fee2e2; color: #991b1b; }
-
         #payment-modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; justify-content:center; align-items:center; }
         .modal-content { background: white; padding: 30px; border-radius: 25px; width: 90%; max-width: 450px; text-align: center; }
-
         @media (max-width: 850px) { #main-store, #admin-panel { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -45,14 +40,14 @@
             <input type="text" id="lPhone" placeholder="ژمارەی مۆبایل یان Admin">
             <input type="password" id="lPass" placeholder="پاسۆرد">
             <button class="btn btn-p" onclick="login()">چوونە ژوورەوە</button>
-            <p onclick="document.getElementById('login-form').style.display='none';document.getElementById('signup-form').style.display='block';" style="cursor:pointer; color:var(--p);">ئەژمار دروست بکە</p>
+            <p onclick="toggleAuth(true)" style="cursor:pointer; color:var(--p);">ئەژمار دروست بکە</p>
         </div>
         <div id="signup-form" style="display:none;">
             <input type="text" id="rName" placeholder="ناوی تەواو">
-            <input type="number" id="rPhone" placeholder="ژمارەی مۆبایل">
+            <input type="number" id="rPhone" placeholder="ژمارەی مۆبایل (0750/0770/0780)">
             <input type="password" id="rPass" placeholder="پاسۆرد">
             <button class="btn btn-s" onclick="signup()">تۆمارکردن</button>
-            <p onclick="document.getElementById('signup-form').style.display='none';document.getElementById('login-form').style.display='block';" style="cursor:pointer; color:var(--p);">ئەژمارم هەیە</p>
+            <p onclick="toggleAuth(false)" style="cursor:pointer; color:var(--p);">ئەژمارم هەیە</p>
         </div>
     </div>
 
@@ -67,6 +62,7 @@
                 <div class="product-grid">
                     <div class="product-item" onclick="addToCart('60 UC', 1500)">60 UC<b>1,500 د.ک</b></div>
                     <div class="product-item" onclick="addToCart('325 UC', 7250)">325 UC<b>7,250 د.ک</b></div>
+                    <div class="product-item" onclick="addToCart('660 UC', 14500)">660 UC<b>14,500 د.ک</b></div>
                     <div class="product-item" onclick="addToCart('1000 Coins', 19000)">1000 C<b>19,000 د.ک</b></div>
                 </div>
             </div>
@@ -78,7 +74,7 @@
         <div class="card" style="height:fit-content; border:2px solid var(--p);">
             <h3>🛒 سەبەتە</h3>
             <div id="cart-list"></div>
-            <div style="font-size:22px; font-weight:bold; margin-top:15px; border-top:2px dashed #eee; padding-top:10px; display:flex; justify-content:space-between;">
+            <div style="font-size:20px; font-weight:bold; margin-top:15px; border-top:1px solid #eee; padding-top:10px; display:flex; justify-content:space-between;">
                 <span>کۆ:</span><span id="total-price">0 د.ک</span>
             </div>
             <button class="btn btn-s" style="margin-top:15px;" onclick="checkOut()">تەواوکردنی کڕین</button>
@@ -108,8 +104,14 @@
             <img id="qr-img" style="width:180px;">
             <p id="qr-info" style="font-weight:bold;"></p>
         </div>
-        <input type="text" id="txID" placeholder="Transaction ID">
-        <button class="btn btn-p" onclick="finalizeOrder()">ناردنی وەسڵ</button>
+        [attachment_0](attachment)
+        <div style="text-align:right; margin-bottom:10px;">
+            <label>کۆیی گشتی پارە:</label>
+            <input type="text" id="finalAmt" readonly style="background:#eee;">
+            <label>ژمارەی وەسڵ (TXID):</label>
+            <input type="text" id="txID" placeholder="ژمارەی وەسڵ لێرە بنووسە">
+        </div>
+        <button class="btn btn-p" onclick="finalizeOrder()">✅ ناردنی وەسڵ بۆ واتسئاپ</button>
         <button onclick="document.getElementById('payment-modal').style.display='none'" style="border:none; background:none; color:gray; cursor:pointer; margin-top:10px;">داخستن</button>
     </div>
 </div>
@@ -121,115 +123,98 @@
 
     if(loggedUser) loggedUser.name === 'ZANA' ? showAdmin() : initStore();
 
+    function toggleAuth(s) { document.getElementById('login-form').style.display=s?'none':'block'; document.getElementById('signup-form').style.display=s?'block':'none'; }
+
     function signup() {
-        const name = document.getElementById('rName').value, phone = document.getElementById('rPhone').value, pass = document.getElementById('rPass').value;
-        const prefix = phone.substring(0, 4);
-        if(!['0750', '0770', '0780'].includes(prefix) || phone.length < 11) return alert("ژمارەکە هەڵەیە!");
-        users.push({ name, phone, pass, history: [] });
+        const n=document.getElementById('rName').value, p=document.getElementById('rPhone').value, ps=document.getElementById('rPass').value;
+        if(!['0750','0770','0780'].includes(p.substring(0,4)) || p.length<11) return alert("ژمارەکە هەڵەیە");
+        users.push({name:n, phone:p, pass:ps, history:[]});
         localStorage.setItem('zana_official_db', JSON.stringify(users));
-        alert("تۆمارکردن سەرکەوتوو بوو"); location.reload();
+        alert("سەرکەوتوو بوو"); toggleAuth(false);
     }
 
     function login() {
-        const input = document.getElementById('lPhone').value, pass = document.getElementById('lPass').value;
-        if(input === 'ZANA' && pass === '112233') {
-            loggedUser = { name: 'ZANA' };
-            localStorage.setItem('zana_official_logged', JSON.stringify(loggedUser));
-            showAdmin(); return;
-        }
-        const user = users.find(u => u.phone === input && u.pass === pass);
-        if(user) {
-            loggedUser = user;
-            localStorage.setItem('zana_official_logged', JSON.stringify(loggedUser));
-            initStore();
-        } else alert("هەڵەیە!");
+        const p=document.getElementById('lPhone').value, ps=document.getElementById('lPass').value;
+        if(p==='ZANA' && ps==='112233') { loggedUser={name:'ZANA'}; localStorage.setItem('zana_official_logged', JSON.stringify(loggedUser)); showAdmin(); return; }
+        const u=users.find(x=>x.phone===p && x.pass===ps);
+        if(u) { loggedUser=u; localStorage.setItem('zana_official_logged', JSON.stringify(u)); initStore(); } else alert("هەڵەیە");
     }
 
-    function initStore() {
-        document.getElementById('auth-section').style.display = 'none';
-        document.getElementById('main-store').style.display = 'grid';
-        document.getElementById('display-user').innerText = "👤 " + loggedUser.name;
-        renderHistory();
-    }
-
-    function showAdmin() {
-        document.getElementById('auth-section').style.display = 'none';
-        document.getElementById('admin-panel').style.display = 'grid';
-        renderAdminOrders();
-    }
-
+    function initStore() { document.getElementById('auth-section').style.display='none'; document.getElementById('main-store').style.display='grid'; document.getElementById('display-user').innerText=loggedUser.name; renderHistory(); }
+    function showAdmin() { document.getElementById('auth-section').style.display='none'; document.getElementById('admin-panel').style.display='grid'; renderAdminOrders(); }
     function logout() { localStorage.removeItem('zana_official_logged'); location.reload(); }
 
-    function addToCart(n, p) { cart.push({n, p}); renderCart(); }
-
-    function renderCart() {
-        const list = document.getElementById('cart-list');
-        list.innerHTML = ""; let total = 0;
-        cart.forEach((i, idx) => { total += i.p; list.innerHTML += `<div style="display:flex;justify-content:space-between;"><span>${i.n}</span><span>${i.p.toLocaleString()} <button onclick="cart.splice(${idx},1);renderCart()" style="color:red;border:none;background:none;">✕</button></span></div>`; });
-        document.getElementById('total-price').innerText = total.toLocaleString() + " د.ک";
+    function addToCart(n, p) { 
+        let item = cart.find(x=>x.n===n);
+        if(item) item.q++; else cart.push({n, p, q:1}); 
+        renderCart(); 
     }
 
-    function checkOut() { if(cart.length > 0) { document.getElementById('payment-modal').style.display = 'flex'; renderQR(); } }
+    function renderCart() {
+        const l=document.getElementById('cart-list'); l.innerHTML=""; let t=0;
+        cart.forEach((i,x)=>{ t+=i.p*i.q; l.innerHTML+=`<div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span>${i.n} (x${i.q})</span><span>${(i.p*i.q).toLocaleString()} <button onclick="cart.splice(${x},1);renderCart()" style="color:red;border:none;background:none;">✕</button></span></div>`; });
+        document.getElementById('total-price').innerText = t.toLocaleString() + " د.ک";
+        document.getElementById('finalAmt').value = t.toLocaleString() + " دینار";
+    }
 
+    function checkOut() { if(cart.length>0) { document.getElementById('payment-modal').style.display='flex'; renderQR(); } }
     function renderQR() {
-        const way = document.getElementById('payWay').value;
-        document.getElementById('qr-img').src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + (way==='fastpay'?'07758887488':'FIB_ZANA');
-        document.getElementById('qr-info').innerText = way==='fastpay'?'07758887488':'Zana Account';
+        const w=document.getElementById('payWay').value;
+        document.getElementById('qr-img').src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data="+(w==='fastpay'?'07758887488':'FIB_ZANA');
+        document.getElementById('qr-info').innerText=w==='fastpay'?'07758887488':'Zana Store Account';
     }
 
     function finalizeOrder() {
-        const tx = document.getElementById('txID').value;
-        if(!tx) return alert("TXID بنووسە");
-        const order = { id: Date.now(), items: cart.map(i=>i.n).join('+'), total: document.getElementById('total-price').innerText, date: new Date().toLocaleString('ku-IQ'), txid: tx, status: 'pending' };
-        const uIdx = users.findIndex(u => u.phone === loggedUser.phone);
+        const tx=document.getElementById('txID').value; if(!tx) return alert("TXID بنووسە");
+        const orderID = Math.floor(1000 + Math.random() * 9000);
+        let itemsStr = cart.map(i=> `${i.n} (عدد:${i.q} - نرخ:${i.p})`).join('%0A');
+        
+        const order = { id: orderID, items: cart.map(i=>`${i.n} x${i.q}`).join(', '), total: document.getElementById('total-price').innerText, date: new Date().toLocaleString('ku-IQ'), txid: tx, status: 'pending' };
+        
+        const uIdx=users.findIndex(u=>u.phone===loggedUser.phone);
         users[uIdx].history.unshift(order);
         localStorage.setItem('zana_official_db', JSON.stringify(users));
-        window.open(`https://wa.me/9647758887488?text=وەسڵی_نوێ_${tx}`);
-        cart = []; renderCart(); renderHistory(); document.getElementById('payment-modal').style.display='none';
+
+        let msg = `*🚀 داواکاری نوێ #${orderID}*%0A` +
+                  `*کڕیار:* ${loggedUser.name}%0A` +
+                  `*کاڵاکان:*%0A${itemsStr}%0A` +
+                  `*کۆی گشتی:* ${order.total}%0A` +
+                  `*ژمارەی وەسڵ:* ${tx}`;
+        
+        window.open(`https://wa.me/9647758887488?text=${msg}`, '_blank');
+        cart=[]; renderCart(); renderHistory(); document.getElementById('payment-modal').style.display='none';
     }
 
     function renderHistory() {
-        const hl = document.getElementById('history-list');
-        hl.innerHTML = (loggedUser.history || []).map(h => `<div class="history-item"><div><b>${h.items}</b><br><small>${h.date}</small></div><span class="status-badge ${h.status}">${h.status==='pending'?'لە پێداچوونەوەیە':h.status==='completed'?'تەواوبوو':'ڕەتکرایەوە'}</span></div>`).join('');
+        const hl=document.getElementById('history-list');
+        hl.innerHTML=(loggedUser.history||[]).map(h=>`<div class="history-item"><div><b>#${h.id} - ${h.items}</b><br><small>${h.date}</small></div><span class="status-badge ${h.status}">${h.status==='pending'?'پێداچوونەوە':h.status==='completed'?'تەواوبوو':'ڕەتکرایەوە'}</span></div>`).join('');
     }
 
     function renderAdminOrders() {
-        const al = document.getElementById('admin-order-list');
-        let html = "";
-        users.forEach(u => {
-            u.history.forEach(h => {
-                html += `<div class="history-item">
-                    <div><b>${u.name} (${u.phone})</b><br>${h.items} - ${h.total}<br><small>وەسڵ: ${h.txid}</small></div>
-                    <div>
-                        <span class="status-badge ${h.status}">${h.status}</span>
-                        ${h.status==='pending' ? `
-                            <button class="btn-admin" onclick="updateStatus('${u.phone}', ${h.id}, 'completed')">چالاککردن</button>
-                            <button class="btn-reject" onclick="updateStatus('${u.phone}', ${h.id}, 'rejected')">ڕەتکردنەوە</button>
-                        ` : ''}
-                    </div>
-                </div>`;
-            });
-        });
-        al.innerHTML = html || "هیچ داواکارییەک نییە";
+        const al=document.getElementById('admin-order-list'); let html="";
+        users.forEach(u=>{ u.history.forEach(h=>{
+            html+=`<div class="history-item">
+                <div><b>داواکاری #${h.id}</b><br>کڕیار: ${u.name} (${u.phone})<br>کاڵا: ${h.items}<br>کۆ: ${h.total} | وەسڵ: ${h.txid}</div>
+                <div>
+                    ${h.status==='pending' ? `
+                    <button class="btn-admin" onclick="updateStatus('${u.phone}', ${h.id}, 'completed')">چالاککردن</button>
+                    <button class="btn-reject" onclick="updateStatus('${u.phone}', ${h.id}, 'rejected')">ڕەتکردنەوە</button>
+                    ` : `<span class="status-badge ${h.status}">${h.status}</span>`}
+                </div>
+            </div>`;
+        });});
+        al.innerHTML=html||"داواکاری نییە";
     }
 
-    function updateStatus(phone, id, newStatus) {
-        const uIdx = users.findIndex(u => u.phone === phone);
-        const oIdx = users[uIdx].history.findIndex(o => o.id === id);
-        users[uIdx].history[oIdx].status = newStatus;
+    function updateStatus(p, id, s) {
+        const uIdx=users.findIndex(u=>u.phone===p);
+        const oIdx=users[uIdx].history.findIndex(o=>o.id===id);
+        users[uIdx].history[oIdx].status=s;
         localStorage.setItem('zana_official_db', JSON.stringify(users));
         renderAdminOrders();
-        
-        const customerName = users[uIdx].name;
-        const phoneFormatted = phone.startsWith('0') ? '964' + phone.substring(1) : phone;
-        
-        let msg = newStatus === 'completed' 
-            ? `*سڵاو ${customerName}*%0Aداواکارییەکەت بە سەرکەوتوویی *چالاک کرا* ✅`
-            : `*سڵاو ${customerName}*%0Aداواکارییەکەت *ڕەتکرایەوە* ❌%0Aتکایە دڵنیابەرەوە لە ڕاستی وەسڵەکەت و دووبارە هەوڵ بدەرەوە.`;
-
-        if(confirm(`مامەڵەکە ${newStatus==='completed'?'چالاک کرا':'ڕەتکرایەوە'}. نامە بۆ کڕیار بنێردرێت؟`)) {
-            window.open(`https://wa.me/${phoneFormatted}?text=${msg}`, '_blank');
-        }
+        let ph = p.startsWith('0') ? '964'+p.substring(1) : p;
+        let msg = s==='completed' ? `داواکاری #${id} چالاک کرا ✅` : `داواکاری #${id} ڕەتکرایەوە ❌`;
+        if(confirm("نامە بۆ کڕیار بنێردرێت؟")) window.open(`https://wa.me/${ph}?text=${msg}`, '_blank');
     }
 </script>
 </body>
