@@ -2,33 +2,46 @@
 <html dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>سیستەمی فرۆشتن بە وێنەوە</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستەمی فرۆشتنی زانا</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; text-align: center; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; }
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; text-align: center; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         #reader { width: 100%; border-radius: 10px; margin-bottom: 15px; }
-        .product-display { margin: 15px 0; padding: 10px; border: 2px solid #eee; border-radius: 10px; display: none; }
-        .product-display img { width: 100px; height: 100px; object-fit: cover; border-radius: 5px; }
-        .cart-table { width: 100%; margin-top: 20px; }
-        .cart-table img { width: 40px; height: 40px; border-radius: 5px; }
-        .total { font-size: 24px; color: #28a745; margin: 20px 0; }
+        
+        /* شێوازی خانەی نووسین */
+        .manual-input { display: flex; gap: 5px; margin-bottom: 20px; }
+        input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
+        .add-btn { background: #007bff; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; }
+
+        .cart-table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+        .cart-table th, .cart-table td { border-bottom: 1px solid #eee; padding: 10px; text-align: right; }
+        .cart-table img { width: 50px; height: 50px; object-fit: cover; border-radius: 5px; }
+        
+        .total { font-size: 24px; color: #28a745; margin-top: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>سکان و کڕینی کاڵا</h2>
-    <div id="reader"></div>
-
-    <div id="scan-result" class="product-display">
-        <img id="res-img" src="">
-        <h3 id="res-name"></h3>
-        <p id="res-price"></p>
-        <button onclick="confirmAdd()" style="background:#28a745; color:white; padding:10px; border:none; border-radius:5px; width:100%;">زیادکردن بۆ سەبەتە</button>
+    <h2>سیستەمی سکان و نووسین</h2>
+    
+    <div class="manual-input">
+        <input type="text" id="barcodeField" placeholder="بارکۆدەکە لێرە بنووسە...">
+        <button class="add-btn" onclick="addByText()">زیادکردن</button>
     </div>
 
+    <div id="reader"></div>
+
     <table class="cart-table">
+        <thead>
+            <tr>
+                <th>وێنە</th>
+                <th>کاڵا</th>
+                <th>نرخ</th>
+            </tr>
+        </thead>
         <tbody id="cart-items"></tbody>
     </table>
 
@@ -36,46 +49,51 @@
 </div>
 
 <script>
-    // لێرەدا وێنەکان ببەستەرەوە بە بارکۆدەکان
+    // لیستی کاڵاکانت (دڵنیابە وێنەکان لە گێت‌هەب ئاپلۆد کراون)
     const products = {
-        "12345678": { name: "Iphone 17 Pro Max", price: 10000, img: "https://ibb.co/QjzG1W0X.jpg" }, // ناوی وێنەکە وەک ئەوەی لە گێت‌هەب دایبنێ
+        "1234567": { name: "Herman Oats", price: 10000, img: "https://ibb.co/QjzG1W0X.jpg" },
         "123456": { name: "شامپۆ", price: 5000, img: "shampoo.jpg" }
     };
 
-    let currentProduct = null;
     let cart = [];
 
+    // فەنکشن بۆ زیادکردنی کاڵا
+    function addItem(code) {
+        const product = products[code];
+        if (product) {
+            cart.push(product);
+            updateUI();
+            document.getElementById('barcodeField').value = ""; // خانەکە پاک بکەرەوە
+        } else {
+            alert("ئەم بارکۆدە لە لیستەکەدا نییە: " + code);
+        }
+    }
+
+    // زیادکردن بە نووسین
+    function addByText() {
+        const code = document.getElementById('barcodeField').value;
+        if(code) addItem(code);
+    }
+
+    // زیادکردن بە سکان
     function onScanSuccess(decodedText) {
-        currentProduct = products[decodedText];
-        if (currentProduct) {
-            document.getElementById('scan-result').style.display = 'block';
-            document.getElementById('res-img').src = currentProduct.img;
-            document.getElementById('res-name').innerText = currentProduct.name;
-            document.getElementById('res-price').innerText = currentProduct.price + " دینار";
-        }
+        addItem(decodedText);
     }
 
-    function confirmAdd() {
-        if (currentProduct) {
-            cart.push(currentProduct);
-            updateCart();
-            document.getElementById('scan-result').style.display = 'none';
-        }
-    }
-
-    function updateCart() {
-        const body = document.getElementById('cart-items');
-        body.innerHTML = "";
+    function updateUI() {
+        const list = document.getElementById('cart-items');
+        list.innerHTML = "";
         let total = 0;
-        cart.forEach((item) => {
+        cart.forEach(item => {
             total += item.price;
-            body.innerHTML += `<tr>
-                <td><img src="${item.img}"></td>
-                <td>${item.name}</td>
-                <td>${item.price}</td>
-            </tr>`;
+            list.innerHTML += `
+                <tr>
+                    <td><img src="${item.img}"></td>
+                    <td>${item.name}</td>
+                    <td>${item.price.toLocaleString()} د.ک</td>
+                </tr>`;
         });
-        document.getElementById('total-price').innerText = total;
+        document.getElementById('total-price').innerText = total.toLocaleString();
     }
 
     let scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
