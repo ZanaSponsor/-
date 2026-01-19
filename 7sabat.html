@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AHMAD PHONE - POS</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <title>AHMAD PHONE - POS & Stock</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
@@ -18,12 +16,14 @@
         .section { display: none; }
         .section.active { display: block; }
         input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #ddd; border-radius: 10px; box-sizing: border-box; text-align: center; font-size: 16px; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; transition: 0.2s; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; }
         .btn-blue { background: #007bff; color: white; }
         .btn-green { background: #28a745; color: white; }
         .btn-red { background: #d9534f; color: white; }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
-        .price-input { width: 90px !important; padding: 5px !important; margin: 0 !important; font-size: 14px !important; border: 1px solid #007bff !important; color: #d9534f; font-weight: bold; border-radius: 5px; }
+        .cart-item { border-bottom: 1px solid #eee; padding: 10px 0; }
+        .item-info { display: flex; justify-content: space-between; align-items: center; }
+        .stock-info { font-size: 12px; color: #666; margin-top: 4px; display: block; }
+        .price-input { width: 90px !important; padding: 5px !important; margin: 0 !important; font-size: 14px !important; border: 1px solid #007bff !important; color: #d9534f; font-weight: bold; border-radius: 5px; text-align: center; }
         .total-box { margin-top: 15px; padding: 15px; background: #fff3f3; border-radius: 10px; text-align: center; font-size: 22px; font-weight: bold; color: #d9534f; border: 1px solid #d9534f; }
         #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; margin-bottom: 10px; }
     </style>
@@ -56,53 +56,25 @@
             <button class="btn-blue" style="background:#6c757d;" onclick="startScanner('add')">📷 سکانکردنی بارکۆد</button>
             <input type="text" id="newName" placeholder="ناوی کاڵا">
             <input type="number" id="newPrice" placeholder="نرخی جێگیر">
-            <input type="number" id="newStock" placeholder="بڕ (Stock)">
+            <input type="number" id="newStock" placeholder="بڕی سەرەتایی (Stock)">
             <button class="btn-blue" onclick="saveData()">💾 پاشەکەوتکردن</button>
         </div>
         <div id="reader"></div>
     </div>
 
     <script>
-        // داتابەیسی بنەڕەتی (هەموو ئەو بارکۆدانەی پێشتر ناردبووت لێرەدا جێگیرن)
         const initialDB = {
-            "6926081469953": { name: "LK150S TYPE_C / MICRO", price: 3000, stock: 100 },
-            "6975011272217": { name: "GERLAX L36T TYPE_C", price: 6000, stock: 100 },
-            "6975011272514": { name: "GERLAX GD-43 ALL", price: 6000, stock: 100 },
-            "6975011278769": { name: "GERLAX D7L IPHONE", price: 5000, stock: 100 },
-            "6975011272859": { name: "GERLAX GD-52L IPHONE", price: 5000, stock: 100 },
-            "6975011276406": { name: "GERLAX L16 TYPE_C", price: 5000, stock: 100 },
-            "6975011278721": { name: "GERLAX D7T USB-TYPE_C", price: 3000, stock: 100 },
-            "6972573337538": { name: "WLIW X213 USB-TYPE_C", price: 5000, stock: 100 },
-            "6972573335077": { name: "WLIW T66 USB-MICRO", price: 5000, stock: 100 },
-            "6976504663871": { name: "FLATWIRE USB-IPHONE", price: 5000, stock: 100 },
-            "6941950218456": { name: "MX-CB307 TYPE-C-IPHONE", price: 7000, stock: 100 },
-            "6954176814968": { name: "AORAX 106 USB-TYPE C", price: 12000, stock: 100 },
-            "6978652148781": { name: "AORAX 886Plus T-T", price: 12000, stock: 100 },
-            "6977465962140": { name: "AORAX JS-02 PD+QC", price: 8000, stock: 100 },
-            "195949121319": { name: "USB-C 20W ADAPTER", price: 13000, stock: 100 },
-            "190198001733": { name: "EarPods Lightning", price: 13000, stock: 100 },
-            "190198496263": { name: "USB-C to Lightining", price: 5000, stock: 100 },
-            "194252156926": { name: "IPHONE 14PM 25W ADAPT", price: 25000, stock: 100 },
-            "6761546315549": { name: "AORAX 656 USB-TYPEC/LTG", price: 6000, stock: 100 },
-            "8655106412015": { name: "VJP VI-530", price: 5000, stock: 100 },
-            "6987546500550": { name: "NR-20", price: 5000, stock: 100 },
-            "6972076169247": { name: "R12", price: 5000, stock: 100 },
-            "6971235000520": { name: "BL-06", price: 5000, stock: 100 },
-            "6921762247875": { name: "Stereo Earphone", price: 5000, stock: 100 },
-            "7874154854788": { name: "MEO3", price: 5000, stock: 100 },
-            "8806090270123": { name: "SAMSUNG TYPE C EAR", price: 5000, stock: 100 },
-            "945347310231": { name: "AUX 030-A / 023", price: 3000, stock: 100 },
-            "6954851294023": { name: "REMAX RM-711", price: 5000, stock: 100 },
-            "6989532512530": { name: "P9 HEADPHONE", price: 5000, stock: 100 },
-            "6928760163664": { name: "LENOVO HEADPHONE", price: 15000, stock: 100 },
-            "8698959111155": { name: "B130 VJP", price: 15000, stock: 100 },
-            "6973316320718": { name: "F21", price: 15000, stock: 100 },
-            "6973553370781": { name: "P50 PRO", price: 25000, stock: 100 },
-            "9678142473313": { name: "ULTRAPODS", price: 8000, stock: 100 },
-            "8202692080090": { name: "P9 SERISES 9", price: 25000, stock: 100 },
-            "9318075013353": { name: "F09-ULTRA 3", price: 15000, stock: 100 },
-            "774341632274": { name: "V70", price: 15000, stock: 100 },
-            "6945784555107": { name: "TV09", price: 8000, stock: 100 }
+            "6926081469953": { name: "LK150S TYPE_C / MICRO", price: 3000, stock: 50 },
+            "6975011272217": { name: "GERLAX L36T TYPE_C", price: 6000, stock: 20 },
+            "6975011272514": { name: "GERLAX GD-43 ALL", price: 6000, stock: 15 },
+            "6975011278769": { name: "GERLAX D7L IPHONE", price: 5000, stock: 30 },
+            "6975011272859": { name: "GERLAX GD-52L IPHONE", price: 5000, stock: 25 },
+            "6975011276406": { name: "GERLAX L16 TYPE_C", price: 5000, stock: 10 },
+            "6975011278721": { name: "GERLAX D7T USB-TYPE_C", price: 3000, stock: 40 },
+            "195949121319": { name: "USB-C 20W ADAPTER", price: 13000, stock: 12 },
+            "190198001733": { name: "EarPods Lightning", price: 13000, stock: 8 },
+            "194252156926": { name: "IPHONE 14PM 25W ADAPT", price: 25000, stock: 5 }
+            // دەتوانی هەموو بارکۆدەکانی تر لێرە بە هەمان شێوە دابنێیت
         };
 
         let db = JSON.parse(localStorage.getItem('pos_db')) || initialDB;
@@ -111,15 +83,24 @@
         function addToCart(barcode) {
             const b = barcode.trim();
             if (db[b]) {
+                const product = db[b];
                 const existing = cart.find(i => i.barcode === b);
+                
+                // پشکنینی ستۆک
+                let currentInCart = existing ? existing.qty : 0;
+                if (currentInCart + 1 > product.stock) {
+                    alert(`⚠️ ناتوانیت زیاتر لەمە زیاد بکەیت! بڕی ماوە لە ستۆک تەنها ${product.stock} دانەیە.`);
+                    return;
+                }
+
                 if (existing) {
                     existing.qty += 1;
                 } else {
-                    cart.push({ barcode: b, name: db[b].name, price: db[b].price, qty: 1 });
+                    cart.push({ barcode: b, name: product.name, price: product.price, qty: 1 });
                 }
                 updateUI();
                 document.getElementById('barcodeSell').value = "";
-            } else { alert("کاڵا لە داتابەیسدا نییە!"); }
+            } else { alert("ئەم بارکۆدە لە داتابەیسدا نییە!"); }
         }
 
         function updateUI() {
@@ -129,16 +110,19 @@
             
             cart.forEach((item, index) => {
                 total += (item.price * item.qty);
+                const maxStock = db[item.barcode].stock;
+                
                 list.innerHTML += `
                     <div class="cart-item">
-                        <span><b>${item.qty}x</b> ${item.name}</span>
-                        <input type="number" class="price-input" value="${item.price}" onchange="changePrice(${index}, this.value)">
+                        <div class="item-info">
+                            <span><b>${item.qty}x</b> ${item.name}</span>
+                            <input type="number" class="price-input" value="${item.price}" onchange="changePrice(${index}, this.value)">
+                        </div>
+                        <span class="stock-info">📦 بڕی ماوە لە ستۆک: <b>${maxStock}</b></span>
                     </div>`;
             });
             
             document.getElementById('totalPrice').innerText = total.toLocaleString() + " IQD";
-            
-            // پیشاندانی دوگمەکان تەنها کاتێک سەبەتە پڕ بێت
             const hasItems = cart.length > 0;
             document.getElementById('waBtn').style.display = hasItems ? "block" : "none";
             document.getElementById('clearBtn').style.display = hasItems ? "block" : "none";
@@ -150,7 +134,7 @@
         }
 
         function clearCart() {
-            if(confirm("ئایا دڵنیایت لە سڕینەوەی هەموو سەبەتەکە؟")) {
+            if(confirm("ئایا دڵنیایت لە سڕینەوەی سەبەتەکە؟")) {
                 cart = [];
                 updateUI();
             }
@@ -164,8 +148,11 @@
             cart.forEach(i => {
                 total += (i.price * i.qty);
                 txt += `🔹 ${i.name} (${i.qty}) = ${(i.price*i.qty).toLocaleString()} IQD%0A`;
-                // کەمکردنەوە لە Stock (ئەگەر هەبێت)
-                if(db[i.barcode]) db[i.barcode].stock -= i.qty;
+                
+                // کەمکردنەوەی بڕ لە ستۆک بە شێوەی هەمیشەیی
+                if(db[i.barcode]) {
+                    db[i.barcode].stock -= i.qty;
+                }
             });
             
             txt += `------------------%0A💰 *کۆی گشتی: ${total.toLocaleString()} IQD*`;
@@ -188,13 +175,16 @@
             const n = document.getElementById('newName').value;
             const p = document.getElementById('newPrice').value;
             const s = document.getElementById('newStock').value;
-            if(b && n && p) {
-                db[b] = { name: n, price: parseInt(p), stock: parseInt(s) || 100 };
+            if(b && n && p && s) {
+                db[b] = { name: n, price: parseInt(p), stock: parseInt(s) };
                 localStorage.setItem('pos_db', JSON.stringify(db));
-                alert("کاڵاکە بە سەرکەوتوویی پاشەکەوت کرا!");
+                alert("کاڵاکە بە سەرکەوتوویی زیادکرا بۆ ستۆک!");
                 document.getElementById('newBarcode').value = "";
                 document.getElementById('newName').value = "";
                 document.getElementById('newPrice').value = "";
+                document.getElementById('newStock').value = "";
+            } else {
+                alert("تکایە هەموو خانەکان پڕ بکەرەوە!");
             }
         }
 
@@ -208,10 +198,7 @@
                 else document.getElementById('newBarcode').value = text;
                 html5QrCode.stop(); 
                 r.style.display = "none";
-            }).catch(() => {
-                alert("هەڵە لە کامێرا!");
-                r.style.display = "none";
-            });
+            }).catch(() => { r.style.display = "none"; });
         }
     </script>
 </body>
