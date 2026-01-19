@@ -3,134 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>کۆگای زانا ئادەم - وەسڵی ئەلیکترۆنی</title>
+    <title>کۆگای زانا ئادەم - وەسڵی پێشکەوتوو</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --primary: #3182ce; --fastpay: #e31e24; --success: #25D366; --bg: #f7fafc; }
-        body { font-family: sans-serif; background: var(--bg); padding: 10px; text-align: center; color: #2d3748; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .input-group { margin-bottom: 20px; text-align: right; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; color: #4a5568; }
-        input, select { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; margin-bottom: 10px; box-sizing: border-box; }
-        .btn-add { background: var(--primary); color: white; border: none; padding: 14px; width: 100%; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; }
-        #receipt-area { padding: 20px; border: 2px solid #edf2f7; border-radius: 12px; background: #fff; margin-top: 20px; position: relative; }
-        .item-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
-        .total-box { font-size: 26px; font-weight: bold; color: var(--fastpay); margin-top: 15px; padding: 10px; background: #fff5f5; border-radius: 10px; }
-        .payment-box { display: none; margin-top: 25px; border-top: 2px solid #eee; padding-top: 20px; }
-        .qr-img { width: 100%; max-width: 250px; border-radius: 15px; border: 4px solid #f7fafc; margin-bottom: 15px; }
-        .screenshot-area { background: #f8fafc; padding: 15px; border-radius: 10px; border: 2px dashed #cbd5e0; margin-top: 10px; }
-        .btn-wa { background: var(--success); color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; }
+        :root { --primary: #2d3748; --accent: #3182ce; --fastpay: #e31e24; --success: #25D366; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); padding: 10px; text-align: center; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .header { border-bottom: 3px solid var(--accent); margin-bottom: 20px; padding-bottom: 10px; }
+        .input-group { text-align: right; margin-bottom: 20px; }
+        label { font-weight: bold; display: block; margin-bottom: 8px; color: var(--primary); }
+        input, select { width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px; margin-bottom: 15px; }
+        #receipt-area { padding: 20px; border: 1px solid #edf2f7; border-radius: 15px; background: #fff; margin-top: 20px; }
+        .item-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f1f1; font-size: 14px; }
+        .total-box { font-size: 28px; font-weight: bold; color: var(--fastpay); margin-top: 20px; padding: 15px; background: #fff5f5; border-radius: 12px; border: 1px solid #feb2b2; }
+        .payment-section { display: none; margin-top: 30px; border-top: 2px dashed #cbd5e0; padding-top: 20px; }
+        .qr-img { width: 100%; max-width: 250px; border-radius: 15px; margin: 15px 0; border: 4px solid #eee; }
+        .btn-wa { background: var(--success); color: white; border: none; padding: 18px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; margin-top: 15px; }
+        optgroup { font-weight: bold; color: var(--accent); background: #f7fafc; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="color: var(--primary); margin-bottom:0;">کۆگای زانا ئادەم</h2>
-    <p style="font-size:14px; color:#666; margin-bottom:20px;">سیستەمی فەرمی فرۆشتن و پارەدان</p>
+    <div class="header">
+        <h1 style="margin:0; color: var(--accent);">کۆگای زانا ئادەم</h1>
+        <p style="color: #718096; margin: 5px 0;">سیستەمی جیاکردنەوەی مۆدێلەکان و پارەدان</p>
+    </div>
 
     <div class="input-group">
         <label>ناوی کڕیار:</label>
         <input type="text" id="custName" placeholder="ناوی کڕیار لێرە بنووسە...">
         
-        <label>مۆدێلی شاشە هەڵبژێرە:</label>
-        <select id="itemSelect">
-            <option value="">-- گەڕان بۆ مۆدێل --</option>
+        <label>مۆدێلی شاشە (بەپێی کۆمپانیا جیاکراوەتەوە):</label>
+        <select id="itemSelect" onchange="autoAddItem()">
+            <option value="">-- مۆدێلەکە لێرە هەڵبژێرە --</option>
+            
+            <optgroup label="📱 iPhone Models (+10k)">
+                <option value="iPhone 6G Standard ZY">19000</option>
+                <option value="iPhone 7G Standard ZY">20000</option>
+                <option value="iPhone X ZY HD+">24000</option>
+                <option value="iPhone 11 ZY FULL HD COF">28000</option>
+                <option value="iPhone 13 Pro Max ZY HD+">35000</option>
+                <option value="iPhone 15 Pro Max DD OLED SOFT">108000</option>
+            </optgroup>
+
+            <optgroup label="🔥 POCO Models (+10k)">
+                <option value="POCO X3/X3 PRO ORG">24000</option>
+                <option value="POCO X4 GT ORG">25000</option>
+                <option value="POCO X6 OLED">46000</option>
+                <option value="POCO F5 5G OLED">47000</option>
+                <option value="POCO X7 PRO ORG">72000</option>
+            </optgroup>
+
+            <optgroup label="🚀 Redmi & MI Models (+10k)">
+                <option value="Redmi A1+/A2/A2 original">21000</option>
+                <option value="Redmi Note 13 4G/14 4G OLED">45000</option>
+                <option value="Redmi Note 13 PRO PLUS ORG">65000</option>
+                <option value="MI 12T/12T PRO ORG">55000</option>
+                <option value="MI 11 LITE OLED">65000</option>
+            </optgroup>
+
+            <optgroup label="✨ Infinix & Tecno (+10k)">
+                <option value="Infinix Smart 6 ORG">21000</option>
+                <option value="Infinix Note 30 PRO ORG">48000</option>
+                <option value="Tecno Spark 8 PRO">24000</option>
+                <option value="Tecno Camon 19 PRO ORG">23000</option>
+            </optgroup>
+
+            <optgroup label="💎 Honor & Huawei (+10k)">
+                <option value="Honor X8 2022 Full Original">24000</option>
+                <option value="Honor 90+Frame Original">65000</option>
+                <option value="Huawei Nova 7 5G Incell">26000</option>
+                <option value="Huawei P30 Pro + Frame Original">105000</option>
+            </optgroup>
         </select>
-        <button class="btn-add" onclick="addItem()">+ زیادکردن بۆ وەسڵ</button>
     </div>
 
     <div id="receipt-area">
-        <h3 style="margin:0;">وەسڵی کڕین</h3>
-        <p id="display-info" style="font-size:13px; color:#555;">کڕیار: ---</p>
-        <hr>
+        <h3 style="margin:0;">وەسڵی فرۆشتنی زانا</h3>
+        <p id="display-info">کڕیار: ---</p>
         <div id="cart-list"></div>
         <div class="total-box">کۆی گشتی: <span id="total-amount">0</span> دینار</div>
     </div>
 
-    <button id="pay-btn" class="btn-add" style="background:var(--fastpay); margin-top:15px;" onclick="showPayment()">💳 پارەدان بە فاستپەی</button>
+    <button onclick="showPayment()" style="background:var(--fastpay); color:white; border:none; padding:18px; width:100%; border-radius:12px; margin-top:20px; font-weight:bold; cursor:pointer;">💳 نیشاندانی بارکۆدی فاستپەی</button>
 
-    <div id="payment-box" class="payment-box">
-        <h3 style="color:var(--fastpay); margin-bottom:10px;">Zana Adam - FastPay</h3>
+    <div id="payment-box" class="payment-section">
+        <h3 style="color:var(--fastpay);">FastPay - Zana Adam</h3>
         <img src="1000045529.png" class="qr-img" alt="FastPay QR">
-        
-        <div class="screenshot-area">
-            <p style="margin:0; font-size:14px; font-weight:bold;">سکرین‌شۆتی ناردنی پارەکە ئاپلۆد بکە:</p>
-            <input type="file" id="screenshot" accept="image/*">
-        </div>
-        
+        <input type="file" id="screenshot" accept="image/*" style="margin-bottom:10px;">
         <button class="btn-wa" onclick="sendWhatsApp()">✅ ناردنی وەسڵ بۆ واتسئاپ</button>
     </div>
 </div>
 
 <script>
-    // لیستی هەموو جۆرەکان بە نرخی نوێوە (+10,000)
+    // لیستی نرخەکان بە زیادکردنی ١٠،٠٠٠ دینار
     const products = {
-        // Redmi Models
-        "Redmi A1+/A2/A2 original": 21000, "REDMI A3/A3 PLUS ORG": 22000, "REDMI A5 ORG": 22000,
-        "REDMI 7 ORG": 21000, "REDMI 8/8A ORG": 21000, "REDMI 9/9 PRIME ORG": 21000,
-        "REDMI 9A/9C/10A ORG": 21000, "REDMI 9T ORG": 21000, "REDMI 10 4G ORG": 23000,
-        "REDMI 10 5G/POCO M4/M5 ORG": 23000, "REDMI NOTE 11R/11E ORG": 23000, "REDMI 10C ORG": 21000,
-        "REDMI 12 ORG": 22000, "REDMI 13 ORG": 22000, "REDMI 12C/POCO C55 ORG": 21000,
-        "REDMI 13C/13R ORG": 22000, "REDMI 14C ORG": 22000, "REDMI 15C ORG": 23000,
-        "REDMI NOTE 7/7 PRO ORG": 20000, "REDMI NOTE 8 ORG": 20000, "REDMI NOTE 8 PRO ORG": 22000,
-        "REDMI NOTE 9 ORG": 22000, "REDMI NOTE 9S/9 PRO": 22000, "REDMI NOTE 10/10S INCELL": 22000,
-        "REDMI NOTE 10/10S OLED": 40000, "REDMI NOTE 10 5G ORG": 23000, "REDMI NOTE 10 PRO INCELL": 24000,
-        "REDMI NOTE 11 PRO OLED": 43000, "REDMI NOTE 13 4G/NOTE 14 4G OLED": 45000,
-        "REDMI NOTE 13 PRO 5G OLED": 46000, "REDMI NOTE 13 PRO PLUS ORG": 65000,
-        "REDMI NOTE 14 PRO ORG": 65000,
-
-        // POCO Models
-        "POCO X4 GT ORG": 25000, "POCO X4 PRO OLED": 43000, "POCO X5 OLED": 43000,
-        "POCO X6 OLED": 46000, "POCO X7 PRO ORG": 72000, "POCO F5 5G OLED": 47000,
-        "POCO F5 PRO ORG": 105000, "POCO M6 PRO 4G OLED": 45000, "POCO M7 PRO OLED": 45000,
-
-        // MI Models
-        "MI 11 LITE OLED": 65000, "MI 11T/11T PRO ORG": 46000, "MI 12T/12T PRO ORG": 55000,
-        "MI 10T ORG": 27000, "MI 10 LITE/MI 10 PRO OLED": 62000
+        "iPhone 6G Standard ZY": 19000, "iPhone 7G Standard ZY": 20000, "iPhone X ZY HD+": 24000,
+        "iPhone 11 ZY FULL HD COF": 28000, "iPhone 13 Pro Max ZY HD+": 35000, "iPhone 15 Pro Max DD OLED SOFT": 108000,
+        "POCO X3/X3 PRO ORG": 24000, "POCO X4 GT ORG": 25000, "POCO X6 OLED": 46000, "POCO F5 5G OLED": 47000, "POCO X7 PRO ORG": 72000,
+        "Redmi A1+/A2/A2 original": 21000, "Redmi Note 13 4G/14 4G OLED": 45000, "Redmi Note 13 PRO PLUS ORG": 65000,
+        "MI 12T/12T PRO ORG": 55000, "MI 11 LITE OLED": 65000, "Infinix Smart 6 ORG": 21000,
+        "Infinix Note 30 PRO ORG": 48000, "Tecno Spark 8 PRO": 24000, "Tecno Camon 19 PRO ORG": 23000,
+        "Honor X8 2022 Full Original": 24000, "Honor 90+Frame Original": 65000, "Huawei Nova 7 5G Incell": 26000, "Huawei P30 Pro + Frame Original": 105000
     };
-
-    const select = document.getElementById('itemSelect');
-    for (let name in products) {
-        let opt = document.createElement('option');
-        opt.value = name;
-        opt.innerHTML = name + " - (" + products[name].toLocaleString() + " د.ک)";
-        select.appendChild(opt);
-    }
 
     let cart = [];
 
-    function addItem() {
+    function autoAddItem() {
+        const select = document.getElementById('itemSelect');
         const itemName = select.value;
         const custName = document.getElementById('custName').value;
-        if(!custName || !itemName) return alert("تکایە ناو و مۆدێل پڕ بکەرەوە");
-        cart.push({name: itemName, price: products[itemName]});
-        document.getElementById('display-info').innerText = "کڕیار: " + custName;
-        updateUI();
+        
+        if (!custName) {
+            alert("تکایە سەرەتا ناوی کڕیار بنووسە!");
+            select.value = "";
+            return;
+        }
+        
+        if (itemName) {
+            cart.push({name: itemName, price: products[itemName]});
+            document.getElementById('display-info').innerText = "کڕیار: " + custName;
+            updateUI();
+            select.value = ""; 
+        }
     }
 
     function updateUI() {
         const list = document.getElementById('cart-list');
         list.innerHTML = "";
         let total = 0;
-        cart.forEach(item => {
+        cart.forEach((item, index) => {
             total += item.price;
-            list.innerHTML += `<div class="item-row"><span>${item.name}</span><span>${item.price.toLocaleString()} د.ک</span></div>`;
+            list.innerHTML += `<div class="item-row"><span>${item.name}</span><span>${item.price.toLocaleString()} دینار <button onclick="removeItem(${index})" style="color:red; border:none; background:none; cursor:pointer;">[X]</button></span></div>`;
         });
         document.getElementById('total-amount').innerText = total.toLocaleString();
     }
 
+    function removeItem(index) {
+        cart.splice(index, 1);
+        updateUI();
+    }
+
     function showPayment() {
-        if(cart.length === 0) return alert("سەبەتەکە خاڵییە");
+        if(cart.length === 0) return alert("وەسڵەکە خاڵییە!");
         document.getElementById('payment-box').style.display = 'block';
     }
 
     function sendWhatsApp() {
         const element = document.getElementById('receipt-area');
-        html2pdf().from(element).save('Zana-Receipt.pdf');
-        const myNumber = "9647758887488"; // ژمارەی خۆت لێرە بنووسە
+        html2pdf().from(element).save('Zana-Shop.pdf');
         const buyer = document.getElementById('custName').value;
-        let msg = `*وەسڵی نوێ - کۆگای زانا*%0Aکڕیار: ${buyer}%0Aکۆی گشتی: ${document.getElementById('total-amount').innerText} دینار.`;
-        window.open(`https://wa.me/${myNumber}?text=${msg}`, '_blank');
+        let msg = `*وەسڵی نوێ - زانا ئادەم*%0Aکڕیار: ${buyer}%0Aکۆی گشتی: ${document.getElementById('total-amount').innerText} دینار.`;
+        window.open(`https://wa.me/9647758887488?text=${msg}`, '_blank');
     }
 </script>
 
