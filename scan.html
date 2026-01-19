@@ -1,148 +1,19 @@
-<!DOCTYPE html>
-<html dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zana Store - Full Online System</title>
-    <link href="https://fonts.cdnfonts.com/css/rabar" rel="stylesheet">
-    <style>
-        :root { --p: #1e3a8a; --s: #22c55e; --fastpay: #e31e24; --bg: #f1f5f9; --admin: #7c3aed; --reject: #dc2626; }
-        body { font-family: 'Rabar', sans-serif; background: var(--bg); margin: 0; }
-        .container { max-width: 1200px; margin: auto; padding: 15px; }
-        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #e2e8f0; border-radius: 10px; font-family: 'Rabar'; box-sizing: border-box; }
-        .btn { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; font-family: 'Rabar'; font-weight: bold; width: 100%; transition: 0.3s; }
-        .btn-p { background: var(--p); color: white; }
-        .btn-s { background: var(--s); color: white; }
-        .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; width: auto; cursor: pointer; border: none; color: white; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-        .product-item { background: #f8fafc; border: 2px solid #e2e8f0; padding: 15px; border-radius: 15px; text-align: center; cursor: pointer; }
-        .history-item { border-bottom: 1px solid #eee; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; }
-        .status-badge { padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; }
-        .pending { background: #fef3c7; color: #92400e; }
-        .completed { background: #dcfce7; color: #166534; border: 1px solid #166534; }
-        .rejected { background: #fee2e2; color: #991b1b; border: 1px solid #991b1b; }
-        #payment-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; padding: 20px; }
-        .main-grid { display: none; grid-template-columns: 1fr 350px; gap: 20px; }
-        @media (max-width: 800px) { .main-grid { grid-template-columns: 1fr; } }
-    </style>
-</head>
-<body>
+async function login() {
+    const p = document.getElementById('lPhone').value;
+    const ps = document.getElementById('lPass').value;
 
-<div class="container">
-    <div id="auth-section" class="card" style="max-width:400px; margin:50px auto; text-align:center;">
-        <h2 style="color:var(--p);">ZANA STORE</h2>
-        
-        <div id="login-box">
-            <input type="text" id="lPhone" placeholder="ژمارەی مۆبایل">
-            <input type="password" id="lPass" placeholder="پاسۆرد">
-            <button class="btn btn-p" onclick="login()">چوونە ژوورەوە</button>
-            <p style="margin-top:15px; font-size:14px; color:gray; cursor:pointer;" onclick="toggleAuth(true)">هەژمارم نییە؟ دروستی بکە</p>
-        </div>
+    if(!p || !ps) return alert("تكایە خانەكان پڕ بكەرەوە");
 
-        <div id="signup-box" style="display:none;">
-            <input type="text" id="rName" placeholder="ناوی تەواو">
-            <input type="text" id="rPhone" placeholder="ژمارەی مۆبایل">
-            <input type="password" id="rPass" placeholder="پاسۆرد">
-            <button class="btn btn-s" onclick="signup()">دروستکردنی هەژمار</button>
-            <p style="margin-top:15px; font-size:14px; color:gray; cursor:pointer;" onclick="toggleAuth(false)">ئەژمارم هەیە؟ بچۆ ژوورەوە</p>
-        </div>
-    </div>
-
-    <div id="main-ui" class="main-grid">
-        <div class="header" style="grid-column: 1/-1;">
-            <h3 id="ui-title">فڕۆشگای زانا</h3>
-            <button onclick="logout()" class="btn btn-sm" style="background:var(--reject)">دەرچوون</button>
-        </div>
-
-        <div id="content-side">
-            <div id="user-view" class="card">
-                <h3>🎮 کاڵاکان</h3>
-                <div class="product-grid">
-                    <div class="product-item" onclick="addToCart('60 UC', 1500)">60 UC<br><b>1,500</b></div>
-                    <div class="product-item" onclick="addToCart('325 UC', 7250)">325 UC<br><b>7,250</b></div>
-                    <div class="product-item" onclick="addToCart('660 UC', 14500)">660 UC<br><b>14,500</b></div>
-                </div>
-            </div>
-            
-            <div id="admin-view" class="card" style="display:none;">
-                <h3>📥 داواکارییە نوێیەکان</h3>
-                <div id="admin-orders">باردەکرێت...</div>
-            </div>
-
-            <div class="card">
-                <h3>📜 مێژووی داواکارییەکان</h3>
-                <div id="history-list">هیچ داواکارییەک نییە</div>
-            </div>
-        </div>
-
-        <div id="cart-side">
-            <div class="card">
-                <h3>🛒 سەبەتەکەت</h3>
-                <div id="cart-items" style="min-height: 50px; border-bottom: 1px solid #eee; margin-bottom: 10px;">سەبەتە خاڵییە</div>
-                <div style="display:flex; justify-content:space-between; font-weight:bold;">
-                    <span>کۆ:</span><span id="total-price">0 د.ک</span>
-                </div>
-                <button class="btn btn-s" style="margin-top:15px;" onclick="openPayment()">تەواوکردنی کڕین</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="payment-modal">
-    <div class="card" style="max-width:400px; text-align:center;">
-        <h3 style="color:var(--fastpay);">ناردنی پارە (FastPay)</h3>
-        <div style="background:#fff1f2; padding:15px; border-radius:15px; border:2px dashed var(--fastpay); margin:10px 0;">
-            <h2 style="margin:0; color:var(--fastpay);">0751 007 4008</h2>
-            <small id="pay-total-txt"></small>
-        </div>
-        <input type="text" id="pay-details" placeholder="ناوی یاری + ئایدی یاری">
-        <button class="btn btn-p" onclick="submitOrder()">ناردن بۆ ئادمین</button>
-        <button onclick="document.getElementById('payment-modal').style.display='none'" style="margin-top:10px; border:none; background:none; color:gray; cursor:pointer;">پاشگەزبوونەوە</button>
-    </div>
-</div>
-
-<script>
-    const FB_URL = "https://zana-store-default-rtdb.firebaseio.com/";
-    const TG_TOKEN = "7959366034:AAG0nCQqcG3YsImPf53SViggiUnlWkNFh1o"; 
-    const TG_CHAT_ID = "6259019006";
-
-    let loggedUser = JSON.parse(localStorage.getItem('zana_v7_user'));
-    let cart = [];
-
-    if(loggedUser) { startSystem(); }
-
-    function toggleAuth(showSignup) {
-        document.getElementById('login-box').style.display = showSignup ? 'none' : 'block';
-        document.getElementById('signup-box').style.display = showSignup ? 'block' : 'none';
+    // ١. چوونەژوورەوەی ئادمین (ئۆفلاین کار دەکات بۆ ئەوەی هەمیشە بتوانیت بچیتە ژوورەوە)
+    if(p === '07510074008' && ps === '112233') {
+        loggedUser = { phone: p, isAdmin: true, name: 'Zana Admin' };
+        localStorage.setItem('zana_v7_user', JSON.stringify(loggedUser));
+        location.reload();
+        return;
     }
 
-    async function signup() {
-        const n = document.getElementById('rName').value;
-        const p = document.getElementById('rPhone').value;
-        const ps = document.getElementById('rPass').value;
-        if(!n || !p || !ps) return alert("تکایە هەموو خانەکان پڕ بکەرەوە");
-        
-        const user = { name: n, phone: p, pass: ps };
-        await fetch(`${FB_URL}/users/${p}.json`, { method: 'PUT', body: JSON.stringify(user) });
-        alert("هەژمارەکەت بە سەرکەوتوویی دروستکرا. ئێستا بچۆ ژوورەوە.");
-        toggleAuth(false);
-    }
-
-    async function login() {
-        const p = document.getElementById('lPhone').value;
-        const ps = document.getElementById('lPass').value;
-
-        // Check for Admin
-        if(p === '07510074008' && ps === '112233') {
-            loggedUser = { phone: p, isAdmin: true, name: 'Zana Admin' };
-            localStorage.setItem('zana_v7_user', JSON.stringify(loggedUser));
-            location.reload();
-            return;
-        }
-
-        // Check for normal user in Firebase
+    // ٢. چوونەژوورەوەی بەكارهێنەر لە ڕێگەی فایەربەیسەوە
+    try {
         const res = await fetch(`${FB_URL}/users/${p}.json`);
         const user = await res.json();
 
@@ -151,98 +22,9 @@
             localStorage.setItem('zana_v7_user', JSON.stringify(loggedUser));
             location.reload();
         } else {
-            alert("ژمارەی مۆبایل یان پاسۆرد هەڵەیە!");
+            alert("ئەم ژمارەیە تۆمار نەکراوە یان پاسۆرد هەڵەیە!");
         }
+    } catch (error) {
+        alert("کێشەی ئینتەرنێت یان داتابەیس هەیە. دڵنیابەرەوە لە Rules ی فایەربەیس.");
     }
-
-    function startSystem() {
-        document.getElementById('auth-section').style.display='none';
-        document.getElementById('main-ui').style.display='grid';
-        if(loggedUser.isAdmin) {
-            document.getElementById('admin-view').style.display='block';
-            document.getElementById('user-view').style.display='none';
-            document.getElementById('ui-title').innerText = "Admin Panel";
-            setInterval(fetchAdminOrders, 3000);
-        } else {
-            setInterval(fetchUserOrders, 3000);
-        }
-    }
-
-    function logout() { localStorage.removeItem('zana_v7_user'); location.reload(); }
-
-    function addToCart(n, p) {
-        cart.push({n, p});
-        renderCart();
-    }
-
-    function renderCart() {
-        let t = 0;
-        document.getElementById('cart-items').innerHTML = cart.map((i, idx) => {
-            t += i.p;
-            return `<div style="display:flex;justify-content:space-between;padding:5px 0;"><span>${i.n}</span> <button onclick="cart.splice(${idx},1);renderCart()" style="border:none;background:none;color:red;">✕</button></div>`;
-        }).join('') || "سەبەتە خاڵییە";
-        document.getElementById('total-price').innerText = t.toLocaleString() + " د.ک";
-        document.getElementById('pay-total-txt').innerText = "بڕی پارە: " + t.toLocaleString() + " د.ک";
-    }
-
-    function openPayment() { if(cart.length > 0) document.getElementById('payment-modal').style.display='flex'; }
-
-    async function submitOrder() {
-        const details = document.getElementById('pay-details').value;
-        if(!details) return alert("ناوی یاری و ئایدی بنووسە");
-        
-        const order = {
-            phone: loggedUser.phone,
-            items: cart.map(i=>i.n).join(', '),
-            total: document.getElementById('total-price').innerText,
-            details: details,
-            status: 'pending',
-            time: new Date().toLocaleTimeString('ku-IQ')
-        };
-
-        await fetch(`${FB_URL}/orders.json`, { method: 'POST', body: JSON.stringify(order) });
-        
-        const msg = `🔔 داواکاری نوێ!\n👤 ژمارە: ${order.phone}\n📦 کاڵا: ${order.items}\n💰 بڕ: ${order.total}\n📝 وردەکاری: ${order.details}`;
-        fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(msg)}`);
-
-        alert("داواکارییەکەت نێردرا ✅");
-        cart = []; renderCart(); 
-        document.getElementById('payment-modal').style.display='none';
-    }
-
-    async function fetchUserOrders() {
-        const res = await fetch(`${FB_URL}/orders.json`);
-        const data = await res.json();
-        let html = "";
-        for(let id in data) {
-            if(data[id].phone === loggedUser.phone) {
-                let st = data[id].status === 'pending' ? '⏳ چاوەڕوان' : (data[id].status === 'completed' ? '✅ تەواو' : '❌ ڕەتکراوە');
-                html += `<div class="history-item"><div><b>${data[id].items}</b><br><small>${data[id].time}</small></div><span class="status-badge ${data[id].status}">${st}</span></div>`;
-            }
-        }
-        document.getElementById('history-list').innerHTML = html || "داواکاری نییە";
-    }
-
-    async function fetchAdminOrders() {
-        const res = await fetch(`${FB_URL}/orders.json`);
-        const data = await res.json();
-        let html = "";
-        for(let id in data) {
-            if(data[id].status === 'pending') {
-                html += `<div class="card" style="border-right:5px solid var(--p); margin-bottom:10px;">
-                    <b>${data[id].phone}</b><br>📦 ${data[id].items}<br>📝 ${data[id].details}<hr>
-                    <button class="btn-sm" style="background:var(--s)" onclick="updateStatus('${id}','completed')">وەرگرتن</button>
-                    <button class="btn-sm" style="background:var(--reject)" onclick="updateStatus('${id}','rejected')">ڕەتکردنەوە</button>
-                </div>`;
-            }
-        }
-        document.getElementById('admin-orders').innerHTML = html || "داواکاری نوێ نییە";
-    }
-
-    async function updateStatus(id, s) {
-        await fetch(`${FB_URL}/orders/${id}.json`, { method: 'PATCH', body: JSON.stringify({status: s}) });
-        fetchAdminOrders();
-    }
-</script>
-</body>
-</html>
+}
