@@ -18,11 +18,12 @@
         .section { display: none; }
         .section.active { display: block; }
         input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #ddd; border-radius: 10px; box-sizing: border-box; text-align: center; font-size: 16px; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; transition: 0.2s; }
         .btn-blue { background: #007bff; color: white; }
         .btn-green { background: #28a745; color: white; }
+        .btn-red { background: #d9534f; color: white; }
         .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
-        .price-input { width: 80px !important; padding: 5px !important; margin: 0 !important; font-size: 14px !important; border: 1px solid #007bff !important; color: #d9534f; font-weight: bold; }
+        .price-input { width: 90px !important; padding: 5px !important; margin: 0 !important; font-size: 14px !important; border: 1px solid #007bff !important; color: #d9534f; font-weight: bold; border-radius: 5px; }
         .total-box { margin-top: 15px; padding: 15px; background: #fff3f3; border-radius: 10px; text-align: center; font-size: 22px; font-weight: bold; color: #d9534f; border: 1px solid #d9534f; }
         #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; margin-bottom: 10px; }
     </style>
@@ -41,9 +42,13 @@
             <input type="text" id="barcodeSell" placeholder="بارکۆد بنووسە یان سکان بکە">
             <button class="btn-blue" onclick="addToCart(document.getElementById('barcodeSell').value)">➕ زیادکردن</button>
             <button class="btn-green" onclick="startScanner('sell')">📷 سکانکردن</button>
+            
             <div id="cartItems"></div>
+            
             <div class="total-box" id="totalPrice">0 IQD</div>
-            <button class="btn-green" id="waBtn" style="display:none; background:#25D366;" onclick="completeSale()">✅ کڕین ئەنجام درا</button>
+            
+            <button class="btn-green" id="waBtn" style="display:none; background:#25D366; margin-top:10px;" onclick="completeSale()">✅ کڕین ئەنجام درا</button>
+            <button class="btn-red" id="clearBtn" style="display:none; width:100%;" onclick="clearCart()">🗑️ سڕینەوەی سەبەتە</button>
         </div>
 
         <div id="addSection" class="section">
@@ -58,6 +63,7 @@
     </div>
 
     <script>
+        // داتابەیسی بنەڕەتی (هەموو ئەو بارکۆدانەی پێشتر ناردبووت لێرەدا جێگیرن)
         const initialDB = {
             "6926081469953": { name: "LK150S TYPE_C / MICRO", price: 3000, stock: 100 },
             "6975011272217": { name: "GERLAX L36T TYPE_C", price: 6000, stock: 100 },
@@ -106,16 +112,21 @@
             const b = barcode.trim();
             if (db[b]) {
                 const existing = cart.find(i => i.barcode === b);
-                if (existing) existing.qty += 1;
-                else cart.push({ barcode: b, name: db[b].name, price: db[b].price, qty: 1 });
+                if (existing) {
+                    existing.qty += 1;
+                } else {
+                    cart.push({ barcode: b, name: db[b].name, price: db[b].price, qty: 1 });
+                }
                 updateUI();
                 document.getElementById('barcodeSell').value = "";
-            } else { alert("نەدۆزرایەوە!"); }
+            } else { alert("کاڵا لە داتابەیسدا نییە!"); }
         }
 
         function updateUI() {
-            const list = document.getElementById('cartItems'); list.innerHTML = "";
+            const list = document.getElementById('cartItems'); 
+            list.innerHTML = "";
             let total = 0;
+            
             cart.forEach((item, index) => {
                 total += (item.price * item.qty);
                 list.innerHTML += `
@@ -124,8 +135,13 @@
                         <input type="number" class="price-input" value="${item.price}" onchange="changePrice(${index}, this.value)">
                     </div>`;
             });
+            
             document.getElementById('totalPrice').innerText = total.toLocaleString() + " IQD";
-            document.getElementById('waBtn').style.display = cart.length > 0 ? "block" : "none";
+            
+            // پیشاندانی دوگمەکان تەنها کاتێک سەبەتە پڕ بێت
+            const hasItems = cart.length > 0;
+            document.getElementById('waBtn').style.display = hasItems ? "block" : "none";
+            document.getElementById('clearBtn').style.display = hasItems ? "block" : "none";
         }
 
         function changePrice(index, newPrice) {
@@ -133,26 +149,38 @@
             updateUI();
         }
 
+        function clearCart() {
+            if(confirm("ئایا دڵنیایت لە سڕینەوەی هەموو سەبەتەکە؟")) {
+                cart = [];
+                updateUI();
+            }
+        }
+
         function completeSale() {
             const now = new Date();
             let txt = `✅ *کڕین ئەنجام درا*%0A📅 ${now.toLocaleDateString()} | ⏰ ${now.toLocaleTimeString()}%0A------------------%0A`;
             let total = 0;
+            
             cart.forEach(i => {
                 total += (i.price * i.qty);
                 txt += `🔹 ${i.name} (${i.qty}) = ${(i.price*i.qty).toLocaleString()} IQD%0A`;
+                // کەمکردنەوە لە Stock (ئەگەر هەبێت)
                 if(db[i.barcode]) db[i.barcode].stock -= i.qty;
             });
+            
             txt += `------------------%0A💰 *کۆی گشتی: ${total.toLocaleString()} IQD*`;
+            
             localStorage.setItem('pos_db', JSON.stringify(db));
             window.open(`https://wa.me/9647510074008?text=${txt}`, '_blank');
-            cart = []; updateUI();
+            cart = []; 
+            updateUI();
         }
 
         function showSection(s) {
             document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
             document.getElementById(s + 'Section').classList.add('active');
             document.querySelectorAll('.tab-buttons button').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            if(event) event.target.classList.add('active');
         }
 
         function saveData() {
@@ -163,18 +191,27 @@
             if(b && n && p) {
                 db[b] = { name: n, price: parseInt(p), stock: parseInt(s) || 100 };
                 localStorage.setItem('pos_db', JSON.stringify(db));
-                alert("پاشەکەوت کرا!");
+                alert("کاڵاکە بە سەرکەوتوویی پاشەکەوت کرا!");
+                document.getElementById('newBarcode').value = "";
+                document.getElementById('newName').value = "";
+                document.getElementById('newPrice').value = "";
             }
         }
 
         let html5QrCode;
         function startScanner(m) {
-            const r = document.getElementById('reader'); r.style.display = "block";
+            const r = document.getElementById('reader'); 
+            r.style.display = "block";
             html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (text) => {
-                if(m === 'sell') addToCart(text); else document.getElementById('newBarcode').value = text;
-                html5QrCode.stop(); r.style.display = "none";
-            }).catch(() => r.style.display = "none");
+                if(m === 'sell') addToCart(text); 
+                else document.getElementById('newBarcode').value = text;
+                html5QrCode.stop(); 
+                r.style.display = "none";
+            }).catch(() => {
+                alert("هەڵە لە کامێرا!");
+                r.style.display = "none";
+            });
         }
     </script>
 </body>
