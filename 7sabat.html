@@ -3,77 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AHMAD PHONE - نرخی کاڵاکان</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <title>Zana Sponsor</title>
+    
+    <script>
+    !function (w, d, t) {
+      w.Tawk_WindowCode = t;
+      var sw = d.createElement('script');
+      sw.type = 'text/javascript'; sw.async = !0;
+      sw.src = 'https://analytics.tiktok.com/i18n/pixel/sdk.js?sdkid=' + t;
+      var s = d.getElementsByTagName('script')[0];
+      s.parentNode.insertBefore(sw, s);
+    }(window, document, '7597026457533104144');
+    ttq.track('PageView');
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
-        body { font-family: sans-serif; background-color: #f4f7f6; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .header { text-align: center; margin-bottom: 20px; color: #333; }
-        .container { width: 100%; max-width: 400px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; text-align: center; }
-        button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        #reader { width: 100%; margin-top: 15px; border-radius: 10px; overflow: hidden; }
-        .result-card { margin-top: 20px; padding: 15px; border: 2px solid #007bff; border-radius: 10px; display: none; text-align: center; background: #eef6ff; }
-        .price { font-size: 24px; color: #d9534f; font-weight: bold; }
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; background-color: #fff; margin: 0; }
+        .profile-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; }
+        .link-card { width: 100%; max-width: 350px; padding: 15px; margin-bottom: 12px; border-radius: 50px; text-decoration: none; color: white; text-align: center; font-weight: bold; font-size: 18px; }
+        .whatsapp { background: #25D366; }
+        .viber { background: #7360f2; }
+        .phone { background: #007bff; }
+        .footer-link { margin-top: 40px; color: #42e36d; text-decoration: none; border: 1px solid #42e36d; padding: 8px 30px; border-radius: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>AHMAD PHONE</h1>
-        <p>بۆ زانینی نرخی کاڵاکان بارکۆد بنووسە یان سکان بکە</p>
-    </div>
+    <img src="https://i.ibb.co/VYJZyyj7/1000045264.jpg" class="profile-img">
+    <h1>Zana Sponsor</h1>
+    <p>بۆ پەیوەندی کردن، کلیک بکە</p>
 
-    <div class="container">
-        <input type="text" id="barcodeInput" placeholder="ژمارەی بارکۆد لێرە بنووسە...">
-        <button onclick="checkPrice(document.getElementById('barcodeInput').value)">بگەڕێ بۆ نرخ</button>
+    <a href="https://wa.me/+9647758887488" class="link-card whatsapp">واتساپ</a>
+    <a href="viber://chat?number=+9647758887488" class="link-card viber">ڤایبەر</a>
+    <a href="tel:+9647758887488" class="link-card phone">تەلەفۆن</a>
 
-        <hr>
-        
-        <button style="background-color: #28a745;" onclick="startScanner()">کردنەوەی کامێرا (Scan)</button>
-        <div id="reader"></div>
-
-        <div id="result" class="result-card">
-            <h3 id="itemName">ناوی کاڵا</h3>
-            <div class="price" id="itemPrice">0 IQD</div>
-        </div>
-    </div>
-
-    <script>
-        // لێرە لیستی کاڵاکانت دابنێ (بارکۆد، ناو، نرخ)
-        const products = {
-            "123456": { name: "iPhone 15 Pro Max", price: "1,450,000 IQD" },
-            "987654": { name: "Samsung S24 Ultra", price: "1,320,000 IQD" },
-            "001122": { name: "Redmi Note 13", price: "250,000 IQD" }
-        };
-
-        function checkPrice(barcode) {
-            const resultDiv = document.getElementById('result');
-            const itemName = document.getElementById('itemName');
-            const itemPrice = document.getElementById('itemPrice');
-
-            if (products[barcode]) {
-                itemName.innerText = products[barcode].name;
-                itemPrice.innerText = products[barcode].price;
-                resultDiv.style.display = "block";
-            } else {
-                alert("ئەم بارکۆدە بوونی نییە!");
-                resultDiv.style.display = "none";
-            }
-        }
-
-        function startScanner() {
-            const html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                { fps: 10, qrbox: { width: 250, height: 150 } },
-                (decodedText) => {
-                    document.getElementById('barcodeInput').value = decodedText;
-                    checkPrice(decodedText);
-                    html5QrCode.stop(); // دوای دۆزینەوە کامێراکە دەوەستێت
-                }
-            ).catch(err => alert("کامێرا کار ناکات: " + err));
-        }
-    </script>
+    <a href="https://zana-sponsor.vercel.app" class="footer-link">Zana Sponsor</a>
 
 </body>
 </html>
