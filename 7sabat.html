@@ -186,7 +186,11 @@
             history.unshift({ date: dateStr, items: itemsText.replace(/%0A/g, ', '), total: total });
             localStorage.setItem('ahmad_pos_db', JSON.stringify(db));
             localStorage.setItem('ahmad_pos_history', JSON.stringify(history));
-            window.open(`https://wa.me/9647510074008?text=✅ فرۆشرا - مۆبایلی ئەحمەد%0A📅 ${dateStr}%0A------------------%0A${itemsText}💰 کۆی گشتی: ${total.toLocaleString()} IQD`, '_blank');
+            
+            // ژمارە نوێیەکەی واتسئاپ
+            const waNumber = "9647503991323";
+            window.open(`https://wa.me/${waNumber}?text=✅ فرۆشرا - مۆبایلی ئەحمەد%0A📅 ${dateStr}%0A------------------%0A${itemsText}💰 کۆی گشتی: ${total.toLocaleString()} IQD`, '_blank');
+            
             cart = []; renderCart();
         }
 
@@ -217,6 +221,7 @@
                 db[b] = { name: n, price: parseInt(p), stock: parseInt(s) || 0 };
                 localStorage.setItem('ahmad_pos_db', JSON.stringify(db));
                 alert("پاشەکەوت کرا ✅");
+                document.getElementById('newBar').value = ""; document.getElementById('newName').value = "";
             }
         }
 
