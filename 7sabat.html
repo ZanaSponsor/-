@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AHMAD PHONE - POS Plus</title>
+    <title>AHMAD PHONE - POS & Database</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
@@ -11,27 +11,24 @@
         .header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         h1 { color: #007bff; margin: 0; font-size: 24px; }
         
-        .section-title { font-size: 14px; color: #666; font-weight: bold; margin-top: 10px; display: block; text-align: right; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; text-align: center; font-size: 16px; transition: 0.3s; }
-        input:focus { border-color: #007bff; outline: none; }
-        
+        .tab-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-buttons button { flex: 1; padding: 10px; font-size: 14px; background: #eee; color: #333; }
+        .tab-buttons button.active { background: #007bff; color: white; }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; text-align: center; font-size: 16px; }
         button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 8px; font-size: 16px; }
         
-        .add-btn { background-color: #007bff; color: white; }
-        .scan-btn { background-color: #28a745; color: white; }
-        .manual-btn { background-color: #ff9800; color: white; margin-top: 5px; }
+        .btn-blue { background-color: #007bff; color: white; }
+        .btn-green { background-color: #28a745; color: white; }
+        .btn-orange { background-color: #ff9800; color: white; }
         
-        #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; margin-bottom: 10px; border: 1px solid #ddd; }
-
-        .cart-section { margin-top: 20px; border-top: 2px dashed #ccc; padding-top: 10px; }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
-        .remove-item { color: #d9534f; cursor: pointer; font-weight: bold; padding: 5px; border: 1px solid #f2dede; border-radius: 5px; }
-        
-        .total-box { margin-top: 15px; padding: 15px; background: #eef6ff; border-radius: 10px; text-align: center; }
-        .total-price { font-size: 24px; color: #d9534f; font-weight: bold; }
-
-        .whatsapp-btn { background-color: #25D366; color: white; margin-top: 15px; display: none; }
-        .manual-section { background: #fffcf5; padding: 10px; border-radius: 12px; border: 1px solid #ffeeba; margin-top: 10px; }
+        #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; border: 1px solid #ddd; }
+        .cart-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
+        .total-box { margin-top: 15px; padding: 15px; background: #eef6ff; border-radius: 10px; text-align: center; font-size: 20px; font-weight: bold; color: #d9534f; }
+        .whatsapp-btn { background-color: #25D366; color: white; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -39,152 +36,128 @@
     <div class="container">
         <div class="header">
             <h1>AHMAD PHONE</h1>
-            <p>سیستەمی سکان و حسابات</p>
         </div>
 
-        <span class="section-title">📦 کاڵای تۆمارکراو (بارکۆد)</span>
-        <input type="text" id="barcodeInput" placeholder="بارکۆد بنووسە">
-        <button class="add-btn" onclick="addToCart(document.getElementById('barcodeInput').value)">➕ زیادکردنی بارکۆد</button>
-        <button class="scan-btn" onclick="startScanner()">📷 سکانکردن (Scan)</button>
-        
-        <div id="reader"></div>
-
-        <div class="manual-section">
-            <span class="section-title">➕ زیادکردنی کاڵای تر (دەستی)</span>
-            <input type="text" id="manualName" placeholder="ناوی کاڵا (بۆ نمونە: کەڤەر)">
-            <input type="number" id="manualPrice" placeholder="نرخ بە دینار (بۆ نمونە: 5000)">
-            <button class="manual-btn" onclick="addManualToCart()">زیادکردنی کاڵای دەرەکی</button>
+        <div class="tab-buttons">
+            <button id="btnSell" class="active" onclick="showSection('sell')">🛒 فرۆشتن</button>
+            <button id="btnAdd" onclick="showSection('add')">📦 تۆمارکردنی کاڵا</button>
         </div>
 
-        <div class="cart-section">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3>لیستی فرۆشتن</h3>
-                <button style="width: auto; padding: 5px 10px; background: #6c757d; color: white; font-size: 12px;" onclick="clearCart()">پاککردنەوە</button>
-            </div>
+        <div id="sellSection" class="section active">
+            <input type="text" id="barcodeSell" placeholder="بارکۆد سکان بکە یان بنووسە">
+            <button class="btn-blue" onclick="addToCart(document.getElementById('barcodeSell').value)">➕ زیادکردن</button>
+            <button class="btn-green" onclick="startScanner('sell')">📷 سکانکردن</button>
             <div id="cartItems"></div>
-            
-            <div class="total-box">
-                <div>کۆیی گشتی نرخ:</div>
-                <div class="total-price" id="totalPrice">0 IQD</div>
-            </div>
-
-            <button class="whatsapp-btn" id="waBtn" onclick="sendToWhatsapp()">✅ ناردنی وەصڵ بۆ واتسئاپ</button>
+            <div class="total-box" id="totalPrice">0 IQD</div>
+            <button class="whatsapp-btn" id="waBtn" style="display:none;" onclick="sendToWhatsapp()">✅ ناردنی وەصڵ</button>
         </div>
+
+        <div id="addSection" class="section">
+            <p style="font-size: 13px; color: #666;">لێرە بارکۆد و ناو و نرخ بنووسە بۆ ئەوەی خەزن بێت.</p>
+            <input type="text" id="newBarcode" placeholder="بارکۆدی کاڵا">
+            <button class="btn-green" style="margin-bottom:5px;" onclick="startScanner('add')">📷 سکانکردنی بارکۆد</button>
+            <input type="text" id="newName" placeholder="ناوی کاڵا">
+            <input type="number" id="newPrice" placeholder="نرخ بە دینار">
+            <button class="btn-orange" onclick="saveNewProduct()">💾 پاشەکەوتکردنی کاڵا</button>
+        </div>
+
+        <div id="reader"></div>
     </div>
 
     <script>
-        let cart = []; // بەکارهێنانی ئارای بۆ ئەوەی ڕێگەی دەستی ئاسانتر بێت
-        const products = {
+        // لێرە کاڵا کۆنەکان و کاڵا نوێیەکان کۆدەبنەوە
+        let db = JSON.parse(localStorage.getItem('ahmad_phone_db')) || {
             "6926081469953": { name: "LK150S (TYPE_C/MICRO)", price: 3000 },
             "6975011272217": { name: "GERLAX L36T TYPE_C", price: 6000 },
             "6975011272514": { name: "GERLAX GD-43 ALL", price: 6000 },
-            "6975011278769": { name: "GERLAX D7L IPHONE", price: 5000 },
-            "6975011272859": { name: "GERLAX GD-52L IPHONE", price: 5000 },
-            "6975011276406": { name: "GERLAX L16 TYPE_C", price: 5000 },
-            "6975011278721": { name: "GERLAX D7T USB-TYPE_C", price: 3000 },
-            "6972573337538": { name: "WLIW X213 USB-TYPE_C", price: 5000 },
-            "6972573335077": { name: "WLIW T66 USB-MICRO", price: 5000 },
-            "6976504663871": { name: "FLATWIRE USB-IPHONE", price: 5000 },
-            "6941950218456": { name: "MX-CB307 TYPE-C-IPHONE", price: 7000 },
-            "6954176814968": { name: "AORAX 106 ADAPTER", price: 12000 },
-            "6978652148781": { name: "AORAX 886Plus T-T", price: 12000 },
-            "6977465962140": { name: "AORAX JS-02 PD+QC", price: 8000 },
-            "195949121319": { name: "USB-C 20W ADAPTER", price: 13000 },
-            "190198001733": { name: "EarPods Lightning", price: 13000 },
-            "190198496263": { name: "USB-C to Lightining", price: 5000 },
-            "194252156926": { name: "IPHONE 14PM 25W ADAPTER", price: 25000 },
-            "6761546315549": { name: "AORAX 656", price: 7000 },
-            "8655106412015": { name: "VJP VI-530", price: 5000 },
-            "6987546500550": { name: "NR-20", price: 5000 },
-            "6972076169247": { name: "R12", price: 5000 },
-            "6971235000520": { name: "BL-06", price: 5000 },
-            "6921762247875": { name: "Stereer Earphone", price: 5000 },
-            "7874154854788": { name: "MEO3", price: 5000 },
-            "8806090270123": { name: "SAMSUNG TYPE C", price: 5000 },
-            "945347310231": { name: "AUX 030-A / 023", price: 5000 },
-            "6954851294023": { name: "REMAX RM-711", price: 5000 },
-            "6989532512530": { name: "P9", price: 5000 },
-            "6928760163664": { name: "LENOVO HEADPHONE", price: 15000 },
-            "8698959111155": { name: "B130 VJP", price: 15000 },
-            "6973316320718": { name: "F21", price: 15000 },
-            "6973553370781": { name: "P50 PRO", price: 25000 },
-            "9678142473313": { name: "ULTRAPODS", price: 8000 },
-            "8202692080090": { name: "P9 SERISES 9", price: 25000 },
-            "9318075013353": { name: "F09-ULTRA 3", price: 15000 },
-            "774341632274": { name: "V70", price: 15000 },
-            "6945784555107": { name: "TV09", price: 8000 }
+            "195949121319": { name: "USB-C 20W ADAPTER", price: 13000 }
+            // دەتوانیت ئەوانی تریش لێرە زیاد بکەیت یان بە دوگمەی "تۆمارکردن" زیادیان بکەیت
         };
+
+        let cart = [];
+
+        function showSection(type) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-buttons button').forEach(b => b.classList.remove('active'));
+            if(type === 'sell') {
+                document.getElementById('sellSection').classList.add('active');
+                document.getElementById('btnSell').classList.add('active');
+            } else {
+                document.getElementById('addSection').classList.add('active');
+                document.getElementById('btnAdd').classList.add('active');
+            }
+        }
+
+        function saveNewProduct() {
+            const barcode = document.getElementById('newBarcode').value.trim();
+            const name = document.getElementById('newName').value.trim();
+            const price = parseInt(document.getElementById('newPrice').value);
+
+            if(barcode && name && price) {
+                db[barcode] = { name: name, price: price };
+                localStorage.setItem('ahmad_phone_db', JSON.stringify(db));
+                alert("کاڵاکە بە سەرکەوتوویی تۆمار کرا!");
+                document.getElementById('newBarcode').value = "";
+                document.getElementById('newName').value = "";
+                document.getElementById('newPrice').value = "";
+            } else {
+                alert("تکایە هەموو زانیارییەکان پڕ بکەرەوە");
+            }
+        }
 
         function addToCart(barcode) {
             const b = barcode.trim();
-            if (products[b]) {
+            if (db[b]) {
                 const existing = cart.find(i => i.barcode === b);
                 if (existing) { existing.qty += 1; } 
-                else { cart.push({ barcode: b, name: products[b].name, price: products[b].price, qty: 1 }); }
+                else { cart.push({ barcode: b, name: db[b].name, price: db[b].price, qty: 1 }); }
                 updateCartUI();
-                document.getElementById('barcodeInput').value = "";
-            } else { alert("بارکۆد نەدۆزرایەوە!"); }
-        }
-
-        function addManualToCart() {
-            const name = document.getElementById('manualName').value;
-            const price = parseInt(document.getElementById('manualPrice').value);
-            if (name && price) {
-                cart.push({ barcode: 'manual', name: name, price: price, qty: 1 });
-                updateCartUI();
-                document.getElementById('manualName').value = "";
-                document.getElementById('manualPrice').value = "";
-            } else { alert("ناوی کاڵا و نرخ بنووسە!"); }
-        }
-
-        function removeFromCart(index) {
-            cart.splice(index, 1);
-            updateCartUI();
+                document.getElementById('barcodeSell').value = "";
+            } else {
+                alert("ئەم بارکۆدە تۆمار نەکراوە! سەرەتا لە بەشی 'تۆمارکردن' زیادی بکە.");
+            }
         }
 
         function updateCartUI() {
             const list = document.getElementById('cartItems');
             list.innerHTML = "";
             let total = 0;
-            
             cart.forEach((item, index) => {
                 const itemTotal = item.price * item.qty;
                 total += itemTotal;
                 list.innerHTML += `<div class="cart-item">
-                    <span><b>(${item.qty}x)</b> ${item.name}</span>
-                    <span>${itemTotal.toLocaleString()} IQD <span class="remove-item" onclick="removeFromCart(${index})">X</span></span>
+                    <span>${item.qty}x ${item.name}</span>
+                    <span>${itemTotal.toLocaleString()} IQD</span>
                 </div>`;
             });
-
             document.getElementById('totalPrice').innerText = total.toLocaleString() + " IQD";
             document.getElementById('waBtn').style.display = cart.length > 0 ? "block" : "none";
         }
 
-        function clearCart() { cart = []; updateCartUI(); }
-
         function sendToWhatsapp() {
             const phone = "9647510074008";
-            let total = 0;
             let itemsText = "";
-            
+            let total = 0;
             cart.forEach((item, index) => {
-                const itemTotal = item.price * item.qty;
-                total += itemTotal;
-                itemsText += `${index + 1}- ${item.name}%0A    بڕ: ${item.qty}%0A    نرخ: ${itemTotal.toLocaleString()} IQD%0A`;
+                total += (item.price * item.qty);
+                itemsText += `${index + 1}- ${item.name} (بڕ: ${item.qty})%0A`;
             });
-
-            const message = `📋 *وەصڵی فرۆشتن - AHMAD PHONE*%0A--------------------------%0A${itemsText}--------------------------%0A💰 *کۆیی گشتی:* ${total.toLocaleString()} IQD%0A⏰ *کات:* ${new Date().toLocaleString('ku-IQ')}`;
+            const message = `📋 *وەصڵی فرۆشتن - AHMAD PHONE*%0A--------------------------%0A${itemsText}--------------------------%0A💰 *کۆیی گشتی:* ${total.toLocaleString()} IQD`;
             window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
         }
 
         let html5QrCode;
-        function startScanner() {
+        function startScanner(mode) {
             const readerDiv = document.getElementById('reader');
             readerDiv.style.display = "block";
             html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 },
                 (decodedText) => {
-                    addToCart(decodedText);
+                    if(mode === 'sell') {
+                        addToCart(decodedText);
+                    } else {
+                        document.getElementById('newBarcode').value = decodedText;
+                    }
                     html5QrCode.stop();
                     readerDiv.style.display = "none";
                 }
