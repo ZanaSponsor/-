@@ -3,193 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zana Adam - Smart POS System</title>
+    <title>Zana Adam - Online Store</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --p: #1e3a8a; --s: #3b82f6; --a: #f43f5e; --bg: #f8fafc; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .main-container { max-width: 1100px; margin: auto; display: grid; grid-template-columns: 1fr 420px; gap: 20px; }
-        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .header { grid-column: 1/-1; text-align: center; padding: 20px; background: var(--p); color: white; border-radius: 15px; }
-        label { display: block; margin-top: 15px; font-weight: bold; color: var(--p); }
-        input, select { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; margin-top: 5px; font-size: 16px; box-sizing: border-box; }
-        .qty-box { display: flex; gap: 10px; margin-top: 15px; align-items: flex-end; }
-        .btn-add { background: var(--s); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: bold; flex: 1; height: 48px; }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f1f5f9; background: #fff; margin-bottom: 5px; border-radius: 8px; }
-        .checkout-card { position: sticky; top: 20px; border: 2px solid var(--s); }
-        .total-row { display: flex; justify-content: space-between; font-size: 24px; font-weight: 800; margin: 20px 0; color: var(--a); border-top: 2px dashed #eee; padding-top: 15px; }
-        .btn-checkout { background: #22c55e; color: white; border: none; padding: 18px; width: 100%; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        .remove-btn { color: #ef4444; cursor: pointer; background: none; border: none; font-weight: bold; }
-        #receipt-area { display: none; padding: 40px; background: white; }
-        @media (max-width: 850px) { .main-container { grid-template-columns: 1fr; } }
+        :root { --primary: #1a202c; --accent: #ff0050; --fastpay: #e31e24; --bg: #f7fafc; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 10px; }
+        .container { max-width: 1000px; margin: auto; }
+        
+        /* Login Section */
+        #auth-section { background: white; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-top: 50px; }
+        
+        /* Main UI */
+        #main-ui { display: none; grid-template-columns: 1fr 380px; gap: 20px; margin-top: 20px; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .header { grid-column: 1/-1; background: var(--primary); color: white; padding: 20px; border-radius: 15px; text-align: center; }
+        
+        /* Category Styles */
+        .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .item-card { border: 2px solid #edf2f7; padding: 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; text-align: center; }
+        .item-card:hover { border-color: var(--accent); background: #fff5f7; }
+        .item-card h4 { margin: 5px 0; color: #2d3748; }
+        .item-card span { color: var(--accent); font-weight: bold; }
+
+        /* Cart & Payment */
+        .fastpay-box { background: #fff5f5; border: 2px solid var(--fastpay); padding: 15px; border-radius: 10px; margin-top: 20px; }
+        .btn-pay { background: var(--fastpay); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        .cart-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        
+        input { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; margin: 10px 0; box-sizing: border-box; }
+        @media (max-width: 850px) { #main-ui { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<div class="main-container">
-    <div class="header">
-        <h1 style="margin:0;">سیستەمی فرۆشتنی زانا ئادەم</h1>
-        <p style="margin:5px 0; opacity: 0.9;">بەشی شاشەی iPhone, Redmi, POCO</p>
+<div class="container">
+    <div id="auth-section">
+        <h2 style="color: var(--accent);">بەخێربێیت بۆ فڕۆشگای زانا</h2>
+        <p>تکایە ناوی خۆت و ژمارەی مۆبایل بنووسە بۆ چوونە ژوورەوە</p>
+        <input type="text" id="userName" placeholder="ناوی تەواو">
+        <input type="number" id="userPhone" placeholder="ژمارەی مۆبایل">
+        <button onclick="login()" class="btn-pay" style="background: var(--primary);">چوونە ژوورەوە</button>
     </div>
 
-    <div class="card">
-        <label>👤 ناوی کڕیار</label>
-        <input type="text" id="custName" placeholder="ناوی تەواوی کڕیار بنووسە...">
-        
-        <label>🔍 گەڕان بۆ مۆدێل (iPhone, Redmi, Poco)</label>
-        <input type="text" id="searchInput" placeholder="ناوی مۆدێل لێرە بنووسە..." oninput="filterItems()">
-        <select id="itemSelect" size="12" style="margin-top:10px;"></select>
-        
-        <div class="qty-box">
-            <div style="flex: 1;">
-                <label>🔢 بڕ (دانە)</label>
-                <input type="number" id="itemQty" value="1" min="1">
+    <div id="main-ui">
+        <div class="header">
+            <h1 style="margin:0;">ZANA ONLINE STORE</h1>
+            <p id="welcome-msg"></p>
+        </div>
+
+        <div class="card">
+            <h3>📦 خزمەتگوزارییەکان هەڵبژێرە</h3>
+            
+            <h4>PUBG Mobile UC</h4>
+            <div class="category-grid">
+                <div class="item-card" onclick="addToCart('60 UC', 1500, 'PUBG')"><h4>60 UC</h4><span>1,500 د.ک</span></div>
+                <div class="item-card" onclick="addToCart('325 UC', 7000, 'PUBG')"><h4>325 UC</h4><span>7,000 د.ک</span></div>
             </div>
-            <button class="btn-add" onclick="addToCart()">➕ زیادکردن بۆ سەبەتە</button>
-        </div>
-    </div>
 
-    <div class="card checkout-card">
-        <h3 style="margin-top:0; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">🛒 سەبەتەی کڕین (Checkout)</h3>
-        <div id="cart-display">
-            <p style="text-align:center; color:#94a3b8; margin-top:20px;">سەبەتەکە خاڵییە</p>
+            <h4>TikTok Coins</h4>
+            <div class="category-grid">
+                <div class="item-card" onclick="addToCart('100 Coins', 2000, 'TikTok')"><h4>100 Coins</h4><span>2,000 د.ک</span></div>
+                <div class="item-card" onclick="addToCart('1000 Coins', 18000, 'TikTok')"><h4>1000 Coins</h4><span>18,000 د.ک</span></div>
+            </div>
+
+            <h4>Sponsor Services</h4>
+            <div class="category-grid">
+                <div class="item-card" onclick="addToCart('TikTok Sponsor', 15000, 'ADS')"><h4>سپۆنسەری تیکتۆک</h4><span>15,000 د.ک</span></div>
+                <div class="item-card" onclick="addToCart('Instagram Ads', 12000, 'ADS')"><h4>سپۆنسەری ئینستا</h4><span>12,000 د.ک</span></div>
+            </div>
         </div>
-        
-        <div class="total-row">
-            <span>کۆی گشتی:</span>
-            <span><span id="totalPrice">0</span> دینار</span>
+
+        <div class="card" style="height: fit-content;">
+            <h3>🛒 سەبەتەی کڕین</h3>
+            <div id="cart-list"><p style="text-align:center; color:#a0aec0;">سەبەتە خاڵییە</p></div>
+            <div style="font-size: 20px; font-weight: bold; margin: 20px 0; border-top: 2px dashed #eee; padding-top: 10px;">
+                کۆی گشتی: <span id="totalPrice">0</span> د.ک
+            </div>
+
+            <div class="fastpay-box">
+                <label>💰 پارەدان بە فاستپەی:</label>
+                <p style="font-size: 13px; color: #666;">بڕی (Total) بنێرە بۆ ئەم ژمارەیە: <b>07758887488</b></p>
+                <input type="number" id="tranID" placeholder="ژمارەی پەیوەندی وەسڵەکە (Transaction ID)">
+            </div>
+            
+            <button class="btn-pay" onclick="checkout()">تەواوکردنی کڕین</button>
         </div>
-        
-        <button class="btn-checkout" onclick="processCheckout()">💳 تەواوکردنی وەسڵ</button>
     </div>
 </div>
 
-<div id="receipt-area">
-    <div style="text-align:center; border-bottom: 2px solid #000; padding-bottom: 20px;">
-        <h2>کۆگای زانا ئادەم</h2>
-        <p id="r-cust" style="font-size: 18px;"></p>
-        <p id="r-date"></p>
-    </div>
-    <div id="r-items" style="margin-top: 20px;"></div>
-    <div style="text-align:center; margin-top: 30px; font-size: 26px; font-weight: bold; border-top: 2px solid #000; padding-top: 15px;">
-        کۆی گشتی: <span id="r-total"></span> دینار
-    </div>
+<div id="receipt-area" style="display:none; padding: 40px; background: white; text-align: center;">
+    <h2>وەسڵی فەرمی - ZANA STORE</h2>
+    <div id="r-details" style="text-align: right; margin-top: 20px;"></div>
 </div>
 
 <script>
-    const products = {
-        // iPhone Models
-        "iPhone 6G STANDARD ZY": 19000, "iPhone 6S STANDARD ZY": 20000, "iPhone 7G STANDARD ZY": 20000,
-        "iPhone 8G STANDARD ZY": 20000, "iPhone XR ZY HD+": 24000, "iPhone 11 ZY HD+": 24000,
-        "iPhone 12 PRO DD OLED": 52000, "iPhone 13 ZY FULL HD": 36000, "iPhone 14 PRO GX OLED": 112000,
-        "iPhone 15 PRO MAX DD OLED": 108000, "iPhone 16 PRO MAX ZY": 106000,
-        // مۆدێلەکانی تر لێرە زیاد بکە...
-        "REDMI NOTE 13 PRO PLUS ORG": 65000, "POCO X6 PRO 5G OLED": 46000
-    };
-
+    let currentUser = {};
     let cart = [];
 
-    function filterItems() {
-        const input = document.getElementById('searchInput').value.toLowerCase();
-        const select = document.getElementById('itemSelect');
-        select.innerHTML = "";
-        for (let name in products) {
-            if (name.toLowerCase().includes(input)) {
-                let opt = document.createElement('option');
-                opt.value = name;
-                opt.text = `${name} - (${products[name].toLocaleString()} دینار)`;
-                select.appendChild(opt);
-            }
-        }
+    function login() {
+        const name = document.getElementById('userName').value;
+        const phone = document.getElementById('userPhone').value;
+        if(name && phone) {
+            currentUser = { name, phone };
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('main-ui').style.display = 'grid';
+            document.getElementById('welcome-msg').innerText = `بەخێربێیت ${name}`;
+        } else { alert("تکایە زانیارییەکان پڕ بکەوە"); }
     }
 
-    function addToCart() {
-        const name = document.getElementById('itemSelect').value;
-        const qty = parseInt(document.getElementById('itemQty').value);
-        if(!name) return alert("تکایە مۆدێلێک هەڵبژێرە!");
-        
-        const existing = cart.find(i => i.name === name);
-        if(existing) existing.qty += qty;
-        else cart.push({ name, price: products[name], qty });
-        
-        updateCartUI();
+    function addToCart(name, price, type) {
+        cart.push({ name, price, type });
+        updateUI();
     }
 
-    function updateCartUI() {
-        const display = document.getElementById('cart-display');
-        display.innerHTML = cart.length === 0 ? '<p style="text-align:center; color:#94a3b8; margin-top:20px;">سەبەتەکە خاڵییە</p>' : "";
+    function updateUI() {
+        const list = document.getElementById('cart-list');
+        list.innerHTML = "";
         let total = 0;
         cart.forEach((item, index) => {
-            const rowTotal = item.price * item.qty;
-            total += rowTotal;
-            display.innerHTML += `
-                <div class="cart-item">
-                    <div style="flex:1;">
-                        <div style="font-weight:bold;">${item.name}</div>
-                        <small>${item.price.toLocaleString()} × ${item.qty}</small>
-                    </div>
-                    <div style="font-weight:800; margin:0 15px;">${rowTotal.toLocaleString()}</div>
-                    <button class="remove-btn" onclick="removeItem(${index})">✕</button>
-                </div>`;
+            total += item.price;
+            list.innerHTML += `<div class="cart-item">
+                <span>${item.name} (${item.type})</span>
+                <span>${item.price.toLocaleString()} <button onclick="removeItem(${index})" style="border:none; color:red; background:none; cursor:pointer;">✕</button></span>
+            </div>`;
         });
         document.getElementById('totalPrice').innerText = total.toLocaleString();
     }
 
-    function removeItem(index) {
-        cart.splice(index, 1);
-        updateCartUI();
-    }
+    function removeItem(index) { cart.splice(index, 1); updateUI(); }
 
-    function processCheckout() {
-        const cust = document.getElementById('custName').value;
-        if(!cust || cart.length === 0) return alert("ناوی کڕیار و سەبەتە پڕ بکەوە!");
+    function checkout() {
+        const tid = document.getElementById('tranID').value;
+        if(cart.length === 0) return alert("سەبەتە خاڵییە");
+        if(!tid) return alert("تکایە ژمارەی وەسڵی فاستپەی بنووسە");
 
         const now = new Date();
-        const dateStr = now.toLocaleDateString('ku-IQ');
-        const timeStr = now.toLocaleTimeString('ku-IQ', { hour: '2-digit', minute: '2-digit' });
+        const fullDate = now.toLocaleDateString('ku-IQ') + " | " + now.toLocaleTimeString('ku-IQ');
 
-        // نیشاندانی زانیاری لەسەر وەسڵی PDF
-        document.getElementById('r-cust').innerText = "کڕیار: " + cust;
-        document.getElementById('r-date').innerText = "بەروار: " + dateStr + " | کات: " + timeStr;
-        
-        let itemsHtml = "";
-        let whatsappMsg = `*وەسڵی کڕین - کۆگای زانا ئادەم*%0A`;
-        whatsappMsg += `*کڕیار:* ${cust}%0A`;
-        whatsappMsg += `*بەروار:* ${dateStr}%0A`;
-        whatsappMsg += `*کات:* ${timeStr}%0A`;
-        whatsappMsg += `----------------------------%0A`;
+        let msg = `*وەسڵی نوێ - ZANA STORE*%0A`;
+        msg += `*کڕیار:* ${currentUser.name}%0A*مۆبایل:* ${currentUser.phone}%0A*بەروار:* ${fullDate}%0A`;
+        msg += `*تڕانزاکشن:* ${tid}%0A`;
+        msg += `--------------------------%0A`;
 
         cart.forEach(item => {
-            const rowTotal = item.price * item.qty;
-            // بۆ PDF
-            itemsHtml += `<div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px dashed #ccc;">
-                <span>${item.name} (${item.qty} دانە)</span>
-                <span>${rowTotal.toLocaleString()} دینار</span>
-            </div>`;
-            // بۆ واتسئاپ
-            whatsappMsg += `📱 *${item.name}*%0A`;
-            whatsappMsg += `🔢 بڕ: ${item.qty} × ${item.price.toLocaleString()}%0A`;
-            whatsappMsg += `💰 نرخ: ${rowTotal.toLocaleString()} د.ک%0A`;
-            whatsappMsg += `----------------------------%0A`;
+            msg += `▫️ ${item.name} - ${item.price.toLocaleString()} د.ک%0A`;
         });
 
-        document.getElementById('r-items').innerHTML = itemsHtml;
-        const finalTotal = document.getElementById('totalPrice').innerText;
-        document.getElementById('r-total').innerText = finalTotal;
-        whatsappMsg += `*کۆی گشتی کۆتایی: ${finalTotal} دینار*`;
+        msg += `--------------------------%0A*کۆی گشتی: ${document.getElementById('totalPrice').innerText} دینار*`;
 
-        // دروستکردنی PDF
-        const element = document.getElementById('receipt-area');
-        element.style.display = 'block';
-        html2pdf().from(element).save(`Zana-Adam-${cust}.pdf`).then(() => {
-            element.style.display = 'none';
+        // بۆ دروستکردنی PDF
+        const rArea = document.getElementById('r-details');
+        rArea.innerHTML = `<p><b>کڕیار:</b> ${currentUser.name}</p><p><b>بەروار:</b> ${fullDate}</p><hr>`;
+        cart.forEach(i => rArea.innerHTML += `<p>${i.name} - ${i.price} د.ک</p>`);
+        
+        document.getElementById('receipt-area').style.display = 'block';
+        html2pdf().from(document.getElementById('receipt-area')).save(`Zana-Store-${tid}.pdf`).then(()=> {
+            document.getElementById('receipt-area').style.display = 'none';
         });
 
-        // کردنەوەی واتسئاپ
-        window.open(`https://wa.me/9647758887488?text=${whatsappMsg}`, '_blank');
+        window.open(`https://wa.me/9647758887488?text=${msg}`, '_blank');
     }
-
-    filterItems();
 </script>
 
 </body>
